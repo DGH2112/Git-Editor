@@ -63,7 +63,7 @@ object frmGEMainForm: TfrmGEMainForm
       end
       item
         Alignment = taCenter
-        Width = 125
+        Width = 150
       end
       item
         Width = 50
