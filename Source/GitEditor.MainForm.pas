@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    20 Jan 2018
+  @Date    21 Jan 2018
   
 **)
 Unit GitEditor.MainForm;
@@ -44,7 +44,7 @@ Uses
   SynEdit,
   SynHighlighterMD,
   SynEditHighlighter,
-  SynHighlighterBNF;
+  SynHighlighterBNF, Vcl.AppEvnts;
 
 Type
   (** A class to represent the main form of the aplpication - a single window editor. **)
@@ -87,6 +87,10 @@ Type
     sehPascal: TSynPasSyn;
     atbrToolBar: TActionToolBar;
     sbrStatusbar: TStatusBar;
+    aeEvents: TApplicationEvents;
+    dlgTask: TTaskDialog;
+    dlgSave: TFileSaveDialog;
+    dlgOpen: TFileOpenDialog;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -101,6 +105,7 @@ Type
     procedure actFileSaveAsExecute(Sender: TObject);
     procedure actEditFindExecute(Sender: TObject);
     procedure actEditReplaceExecute(Sender: TObject);
+    procedure aeEventsHint(Sender: TObject);
   Strict Private
     FIniFile : String;
     FEditor : TSynEdit;
@@ -110,10 +115,11 @@ Type
     Procedure SaveSettings;
     Procedure CreateEditor;
     Procedure EditorStatusChange(Sender : TObject; Changes : TSynStatusChanges);
-    Procedure OpenFile;
+    Procedure OpenFile(Const strFileName : String);
     Procedure UpdateCaption;
     Procedure HookHighlighter;
-    Function SaveFile: Boolean;
+    Function  SaveFile(Const strFileName : String) : Boolean;
+    Function  SaveFileAs(Const strFileName : String) : Boolean;
   Public
   End;
 
@@ -137,9 +143,9 @@ Uses
   GitEditor.SynHighlighterUtils;
 
 Type
-  (** An enumerate to define the statusbar columns. **)
+  (** An enumerate to define the statusbar columns. @nohints **)
   TGEStatusColumn = (scCaret, scInsert, scModified, scFileType);
-  (** A record helper to convert the above enumerate to column indexes. **)
+  (** A record helper to convert the above enumerate to column indexes. @nohints **)
   TGEStatusColumnHelper = Record Helper For TGEStatusColumn
     Function ColumnIndex : Integer;
   End;
@@ -154,9 +160,25 @@ ResourceString
   (** A resource string for prompting the user to save the file. **)
   strSaveFile = 'The file "%s" you are editing has changed! Would you like to save the changed?';
   (** A resource string for a filel not found. **)
-  strFileNotFound = 'This file "%s" was not found!';
+  strFileNotFound = 'The file "%s" was not found!';
+  (** Default filename. **)
+  strUntitled = 'Untitled.txt';
+  (** A filter description and file extensions for text files. **)
+  strDefaultFilter = 'Text Files (*.txt)|*.txt';
+  (** A filter description for all files. **)
+  strAllFiles = 'All files (*.*)';
 
-{ TGEStatusColumnHelper }
+Const
+  (** An ini key for the left of the main window position. **)
+  strLeft = 'Left';
+  (** An ini key for the top of the main window position. **)
+  strTop = 'Top';
+  (** An ini key for the height of the main window size. **)
+  strHeight = 'Height';
+  (** An ini key for the width of the main window size. **)
+  strWidth = 'Width';
+  (** A constant for the default Open / Save dialogue file extension. **)
+  strDefaultExt = '*.txt';
 
 (**
 
@@ -174,6 +196,16 @@ Begin
   Result := Integer(Self);
 End;
 
+(**
+
+  This is an on execute event handler for the Edit Find action.
+
+  @precon  None.
+  @postcon Displays a Find dialogue for a regular expression search.
+
+  @param   Sender as a TObject
+
+**)
 Procedure TfrmGEMainForm.actEditFindExecute(Sender: TObject);
 
 Begin
@@ -214,6 +246,16 @@ Begin
     (Sender As TAction).Enabled := FEditor.CanRedo;
 End;
 
+(**
+
+  This is an on execute event handler for the Edit Replace action.
+
+  @precon  None.
+  @postcon Displays a Replace dialogue for a regular expression search and replace.
+
+  @param   Sender as a TObject
+
+**)
 Procedure TfrmGEMainForm.actEditReplaceExecute(Sender: TObject);
 
 Begin
@@ -250,8 +292,12 @@ End;
 Procedure TfrmGEMainForm.actFileNewExecute(Sender: TObject);
 
 Begin
-  //: @todo Implement FileNew
-  ShowMessage('NOT IMPLEMENTED YET!');
+  SaveFile(FFileName);
+  FFileName := ExpandFileName(strUntitled);
+  FEditor.Clear;
+  UpdateCaption;
+  HookHighlighter;
+  LoadFromINIFile(FIniFile, FEditor);
 End;
 
 (**
@@ -266,10 +312,42 @@ End;
 **)
 Procedure TfrmGEMainForm.actFileOpenExecute(Sender: TObject);
 
+ResourceString
+  strOpenFileTitle = 'Open Text File';
+  strOpenBtnLbl = 'Open';
+  
+Var
+  iComponent: Integer;
+  H : TSynCustomHighlighter;
+  FTI : TFileTypeItem;
+
 Begin
-  SaveFile();
-  ShowMessage('NOT IMPLEMENTED YET!');
-  //: @todo Omplement File Open
+  If SaveFile(FFileName) Then
+    Begin
+      dlgOpen.DefaultExtension := strDefaultExt;
+      dlgOpen.FileTypes.Clear;
+      For iComponent := 0 To ComponentCount - 1 Do
+        If Components[iComponent] Is TSynCustomHighlighter Then
+          Begin
+            H := Components[iComponent] As TSynCustomHighlighter;
+            FTI := dlgOpen.FileTypes.Add;
+            FTI.DisplayName := GetShortHint(H.DefaultFilter);
+            FTI.FileMask := GetLongHint(H.DefaultFilter);
+          End;
+      FTI := dlgOpen.FileTypes.Add;
+      FTI.DisplayName := GetShortHint(strDefaultFilter);
+      FTI.FileMask := GetLongHint(strDefaultFilter);
+      FTI := dlgOpen.FileTypes.Add;
+      FTI.DisplayName := strAllFiles;
+      FTI.FileMask := '*.*';
+      dlgOpen.FileTypeIndex := dlgOpen.FileTypes.Count -  1;
+      dlgOpen.DefaultFolder := GetCurrentDir;
+      dlgOpen.Title := strOpenFileTitle;
+      dlgOpen.FileName := '';
+      dlgOpen.OkButtonLabel := strOpenBtnLbl;
+      If dlgOpen.Execute(Handle) Then
+        OpenFile(dlgOpen.FileName);
+    End;
 End;
 
 (**
@@ -285,8 +363,7 @@ End;
 Procedure TfrmGEMainForm.actFileSaveAsExecute(Sender: TObject);
 
 Begin
-  ShowMessage('NOT IMPLEMENTED YET!');
-  //: @todo Implement File Save
+  SaveFileAs(FFileName);
 End;
 
 (**
@@ -302,7 +379,7 @@ End;
 Procedure TfrmGEMainForm.actFileSaveExecute(Sender: TObject);
 
 Begin
-  SaveFile;
+  SaveFile(FFileName);
 End;
 
 (**
@@ -336,6 +413,23 @@ Procedure TfrmGEMainForm.actToolsOptionsExecute(Sender: TObject);
 
 Begin
   TfrmEditorOptions.Execute(Self, FEditor, True);
+End;
+
+(**
+
+  This is an application on hint event handler.
+
+  @precon  None.
+  @postcon Displays the action hint in the status bar.
+
+  @param   Sender as a TObject
+
+**)
+Procedure TfrmGEMainForm.aeEventsHint(Sender: TObject);
+
+Begin
+  sbrStatusBar.SimplePanel := Application.Hint <> '';
+  sbrStatusBar.SimpleText  := Application.Hint;
 End;
 
 (**
@@ -418,7 +512,7 @@ Procedure TfrmGEMainForm.FormCloseQuery(Sender: TObject; Var CanClose: Boolean);
 Begin
   If FEditor.Modified Then
     Case MessageDlg(Format(strSaveFile, [FFileName]), mtConfirmation, [mbYes, mbNo, mbCancel], 0) Of
-      mrYes:    CanClose := SaveFile;
+      mrYes:    CanClose := SaveFile(FFileName);
       mrNo:     CanClose := true;
       mrCancel: CanClose := false;
     End;
@@ -439,6 +533,7 @@ Procedure TfrmGEMainForm.FormCreate(Sender: TObject);
 Var
   strBuffer : String;
   iSize : Integer;
+  strFileName : String;
   
 Begin
   SetLength(strBuffer, MAX_PATH);
@@ -455,7 +550,11 @@ Begin
   FIniFile := strBuffer + ExtractFileName(FIniFile);
   CreateEditor;
   LoadSettings;
-  OpenFile;
+  If ParamCount = 0 Then
+    strFileName := ExpandFileName(strUntitled)
+  Else
+    strFileName := ExpandFileName(ParamStr(1));
+  OpenFile(strFileName);
 End;
 
 (**
@@ -485,33 +584,61 @@ End;
 **)
 Procedure TfrmGEMainForm.HookHighlighter;
 
+  (**
+
+    This method iterates through the highlighters trying to match the given extension to one of their
+    known extensions. If found the editors highlighter is set
+
+    @precon  None.
+    @postcon If a highlighter implements the file extension the editor highlighter is set.
+
+    @param   strExt as a String as a constant
+
+  **)
+  Procedure IterateHighlighters(Const strExt : String);
+
+  Var
+    iComponent : Integer;
+    strExts : String;
+    H : TSynCustomHighlighter;
+    strHExt : TArray<String>;
+    i : Integer;
+  
+  Begin
+    For iComponent := 0 To ComponentCount - 1 Do
+      Begin
+        If Components[iComponent] Is TSynCustomHighlighter Then
+          Begin
+            H := Components[iComponent] As TSynCustomHighlighter;
+            strExts := GetLongHint(H.DefaultFilter);
+            strHExt := strExts.Split([';', ',', '|']);
+            For i := Low(strHExt) To High(strHExt) Do
+              If LowerCase(strHExt[i]) = strExt Then
+                Begin
+                  FEditor.Highlighter := H;
+                  sbrStatusbar.Panels[scFileType.ColumnIndex].Text := HighlighterName(H);
+                  Break;
+                End;
+          End;
+      End;
+  End;
+
+ResourceString
+  strPlainTextFiles = 'Plain Text Files';
+
 Var
   strExt : String;
-  strExts : String;
-  iComponent : Integer;
-  H : TSynCustomHighlighter;
-  strHExt : TArray<String>;
-  i : Integer;
   
 Begin
-  strExt := '*' + LowerCase(ExtractFileExt(FFileName));
-  sbrStatusbar.Panels[scFileType.ColumnIndex].Text := 'Plain Text Files';
-  For iComponent := 0 To ComponentCount - 1 Do
+  FEditor.Highlighter := Nil;
+  sbrStatusbar.Panels[scFileType.ColumnIndex].Text := strPlainTextFiles;
+  strExt := LowerCase(ExtractFileExt(FFileName));
+  If Length(strExt) = 0 Then
     Begin
-      If Components[iComponent] Is TSynCustomHighlighter Then
-        Begin
-          H := Components[iComponent] As TSynCustomHighlighter;
-          strExts := GetLongHint(H.DefaultFilter);
-          strHExt := strExts.Split([';', ',', '|']);
-          For i := Low(strHExt) To High(strHExt) Do
-            If LowerCase(strHExt[i]) = strExt Then
-              Begin
-                FEditor.Highlighter := H;
-                sbrStatusbar.Panels[scFileType.ColumnIndex].Text := HighlighterName(H);
-                Break;
-              End;
-        End;
-    End;
+      FEditor.Highlighter := sehMD;
+      sbrStatusbar.Panels[scFileType.ColumnIndex].Text := HighlighterName(FEditor.Highlighter);
+    End Else
+      Iteratehighlighters('*' + strExt);
 End;
 
 (**
@@ -530,10 +657,10 @@ Var
 Begin
   iniFile := TMemIniFile.Create(FIniFile);
   Try
-    Left := iniFile.ReadInteger(strWindowPosition, 'Left', Left);
-    Top := iniFile.ReadInteger(strWindowPosition, 'Top', Top);
-    Height := iniFile.ReadInteger(strWindowPosition, 'Height', Height);
-    Width := iniFile.ReadInteger(strWindowPosition, 'Width', Width);
+    Left := iniFile.ReadInteger(strWindowPosition, strLeft, Left);
+    Top := iniFile.ReadInteger(strWindowPosition, strTop, Top);
+    Height := iniFile.ReadInteger(strWindowPosition, strHeight, Height);
+    Width := iniFile.ReadInteger(strWindowPosition, strWidth, Width);
   Finally
     iniFile.Free;
   End;
@@ -547,21 +674,40 @@ End;
   @postcon The file from the first parameter of the command line is open if provied else a default
            untitled file is assumed.
 
-**)
-Procedure TfrmGEMainForm.OpenFile;
+  @param   strFileName as a String as a constant
 
+**)
+Procedure TfrmGEMainForm.OpenFile(Const strFileName : String);
+
+ResourceString
+  strCreateMsg = 'The file "%s" does not exist! Would you like to create this file?';
+
+Var
+  sl : TStringList;
+  
 Begin
-  If ParamCount = 0 Then
-    FFileName := '(untitled)'
+  FFileName := strFileName;
+  If FileExists(FFileName) Then
+    FEditor.Lines.LoadFromFile(FFileName)
   Else
     Begin
-      FFileName := ParamStr(1);
-      If FileExists(FFileName) Then
-        FEditor.Lines.LoadFromFile(FFileName)
-      Else
+      If DirectoryExists(ExtractFilePath(FFileName)) Then
         Begin
-          // Add the ability to create the file.
-          ShowMessage(Format(strFileNotFound, [FFileName]));
+          Case MessageDlg(Format(strCreateMsg , [FFileName]), mtConfirmation, [mbYes, mbNo], 0) Of
+            mrYes:
+              Begin
+                sl := TStringList.Create;
+                Try
+                  sl.SaveToFile(FFileName);
+                Finally
+                  sl.Free;
+                End;
+              End;
+          End;
+        End Else
+        Begin
+          TaskMessageDlg(Application.Title, Format(strFileNotFound, [FFileName]), mtError, [mbOK], 0);
+          FFileName := ExpandFileName(strUntitled)
         End;
     End;
   UpdateCaption;
@@ -577,24 +723,76 @@ End;
   @postcon The file is saved if the underlying filename exists else a SaveAs dialogue is shown. If the 
            file is saved this function returns true.
 
-  @todo    Allow a filename to be passed so this can be used from SaveAs.
-
+  @param   strFileName as a String as a constant
   @return  a Boolean
 
 **)
-Function TfrmGEMainForm.SaveFile : Boolean;
+Function TfrmGEMainForm.SaveFile(Const strFileName : String) : Boolean;
 
 Begin
-  If FileExists(FFileName) Then
+  If FEditor.Modified Then
     Begin
-      FEditor.Lines.SaveToFile(FFileName);
-      SaveToINIFile(FIniFile, FEditor);
-      FEditor.Modified := False;
-      FEditor.MarkModifiedLinesAsSaved();
-      Result := True;
+      If FileExists(FFileName) Then
+        Begin
+          FEditor.Lines.SaveToFile(strFileName);
+          SaveToINIFile(FIniFile, FEditor);
+          FEditor.Modified := False;
+          FEditor.MarkModifiedLinesAsSaved();
+          Result := True;
+        End Else
+          Result := SaveFileAs(strFileName);
     End Else
-      // Add file save as
-      Result := False;
+      Result := True;
+End;
+
+(**
+
+  This method prompts the user tp saves the file to a new filename.
+
+  @precon  None.
+  @postcon The methods returns true if the file was saved to a new filename.
+
+  @param   strFileName as a String as a constant
+  @return  a Boolean
+
+**)
+Function TfrmGEMainForm.SaveFileAs(Const strFileName: String): Boolean;
+
+Const
+  strSaveFileAsTitle = 'Save File As';
+  strSaveBtnLbl = 'Save';
+
+Var
+  FTI : TFileTypeItem;
+  
+Begin
+  dlgSave.DefaultExtension := ExtractFileExt(strFileName);
+  If dlgSave.DefaultExtension = '' Then
+    dlgSave.DefaultExtension := strDefaultExt;
+  dlgSave.FileTypes.Clear;
+  If Assigned(FEditor.Highlighter) Then
+    Begin
+      FTI := dlgSave.FileTypes.Add;
+      FTI.DisplayName := GetShortHint(FEditor.Highlighter.DefaultFilter);
+      FTI.FileMask := GetLongHint(FEditor.Highlighter.DefaultFilter);
+    End Else
+    Begin
+      FTI := dlgSave.FileTypes.Add;
+      FTI.DisplayName := GetShortHint(strDefaultFilter);
+      FTI.FileMask := GetLongHint(strDefaultFilter);
+    End;
+  FTI := dlgSave.FileTypes.Add;
+  FTI.DisplayName := strAllFiles;
+  FTI.FileMask := '*.*';
+  If DirectoryExists(ExtractFilePath(strFileName)) Then
+    dlgSave.DefaultFolder := ExtractFilePath(strFileName);
+  dlgSave.Title := strSaveFileAsTitle;
+  dlgSave.FileName := ExtractFileName(strFileName);
+  dlgSave.OkButtonLabel := strSaveBtnLbl;
+  dlgSave.FileTypeIndex := 1;
+  Result := dlgSave.Execute(Handle);
+  If Result Then
+    FFileName := dlgSave.FileName;
 End;
 
 (**
@@ -613,10 +811,10 @@ Var
 Begin
   iniFile := TMemIniFile.Create(FIniFile);
   Try
-    iniFile.WriteInteger(strWindowPosition, 'Left', Left);
-    iniFile.WriteInteger(strWindowPosition, 'Top', Top);
-    iniFile.WriteInteger(strWindowPosition, 'Height', Height);
-    iniFile.WriteInteger(strWindowPosition, 'Width', Width);
+    iniFile.WriteInteger(strWindowPosition, strLeft, Left);
+    iniFile.WriteInteger(strWindowPosition, strTop, Top);
+    iniFile.WriteInteger(strWindowPosition, strHeight, Height);
+    iniFile.WriteInteger(strWindowPosition, strWidth, Width);
     iniFile.UpdateFile;
   Finally
     iniFile.Free;
@@ -636,13 +834,15 @@ Procedure TfrmGEMainForm.UpdateCaption;
 Const
   strBugFix = ' abcedfghijklmnopqrstuvwxyz';
 
+ResourceString
+  strGitEditorBuild = 'Git Editor %d.%d%s (Build %d.%d.%d.%d): ';
+
 Var
   BuildInfo : TGEBuildInfo;
   
 Begin
   GetBuildInfo(BuildInfo);
-  Caption := Format('Git Editor %d.%d%s (Build %d.%d.%d.%d): ',
-    [
+  Caption := Format(strGitEditorBuild, [
       BuildInfo.FMajor,
       BuildInfo.FMinor,
       strBugFix[BuildInfo.FRelease + 1],

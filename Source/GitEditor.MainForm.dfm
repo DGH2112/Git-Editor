@@ -128,22 +128,25 @@ object frmGEMainForm: TfrmGEMainForm
             Action = actFileNew
             Caption = '&actFileNew'
             ImageIndex = 1
+            ShortCut = 16462
           end
           item
             Action = actFileOpen
             Caption = 'a&ctFileOpen'
             ImageIndex = 2
+            ShortCut = 16463
           end
           item
             Action = actFileSave
             Caption = 'ac&tFileSave'
             ImageIndex = 3
-            ShortCut = 113
+            ShortCut = 16467
           end
           item
             Action = actFileSaveAs
             Caption = 'act&FileSaveAs'
             ImageIndex = 4
+            ShortCut = 24659
           end
           item
             Caption = '-'
@@ -165,6 +168,7 @@ object frmGEMainForm: TfrmGEMainForm
           item
             Action = actEditRedo
             ImageIndex = 7
+            ShortCut = 40968
           end
           item
             Action = actEditCut
@@ -235,29 +239,40 @@ object frmGEMainForm: TfrmGEMainForm
     object actFileNew: TAction
       Category = 'File'
       Caption = 'actFileNew'
+      Hint = 'New|Create a new file in the editor...'
       ImageIndex = 1
+      ShortCut = 16462
       OnExecute = actFileNewExecute
     end
     object actFileOpen: TAction
       Category = 'File'
       Caption = 'actFileOpen'
+      Hint = 'Open|Open and existing file in the editor...'
       ImageIndex = 2
+      SecondaryShortCuts.Strings = (
+        'F3')
+      ShortCut = 16463
       OnExecute = actFileOpenExecute
     end
     object actFileSave: TAction
       Category = 'File'
       Caption = 'actFileSave'
+      Hint = 'Save|Save the current file in the editor....'
       ImageIndex = 3
       SecondaryShortCuts.Strings = (
-        'Ctrl+S')
-      ShortCut = 113
+        'F2')
+      ShortCut = 16467
       OnExecute = actFileSaveExecute
       OnUpdate = actFileSaveUpdate
     end
     object actFileSaveAs: TAction
       Category = 'File'
       Caption = 'actFileSaveAs'
+      Hint = 'Save As|Save the current file in the editor as a new file...'
       ImageIndex = 4
+      SecondaryShortCuts.Strings = (
+        'Shift+F2')
+      ShortCut = 24659
       OnExecute = actFileSaveAsExecute
     end
     object actFileExit: TAction
@@ -276,12 +291,16 @@ object frmGEMainForm: TfrmGEMainForm
       Caption = '&Undo'
       Hint = 'Undo|Reverts the last action'
       ImageIndex = 6
+      SecondaryShortCuts.Strings = (
+        'Alt+BkSp')
       ShortCut = 16474
     end
     object actEditRedo: TAction
       Category = 'Edit'
       Caption = '&Redo'
+      Hint = 'Redo|Redo the last action undone action in the editor...'
       ImageIndex = 7
+      ShortCut = 40968
       OnExecute = actEditRedoExecute
       OnUpdate = actEditRedoUpdate
     end
@@ -323,7 +342,7 @@ object frmGEMainForm: TfrmGEMainForm
     object actEditFind: TAction
       Category = 'Edit'
       Caption = '&Find...'
-      Hint = 'Find|Find tetx in the file...'
+      Hint = 'Find|Find text in the file...'
       ImageIndex = 14
       ShortCut = 16454
       OnExecute = actEditFindExecute
@@ -341,7 +360,7 @@ object frmGEMainForm: TfrmGEMainForm
     Left = 80
     Top = 104
     Bitmap = {
-      494C010110001800A80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110001800AC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1054,6 +1073,31 @@ object frmGEMainForm: TfrmGEMainForm
     Options.AutoDetectLineLimit = 0
     Options.Visible = False
     Left = 184
+    Top = 104
+  end
+  object aeEvents: TApplicationEvents
+    OnHint = aeEventsHint
+    Left = 352
+    Top = 216
+  end
+  object dlgTask: TTaskDialog
+    Buttons = <>
+    RadioButtons = <>
+    Left = 352
+    Top = 160
+  end
+  object dlgSave: TFileSaveDialog
+    FavoriteLinks = <>
+    FileTypes = <>
+    Options = [fdoPathMustExist]
+    Left = 352
+    Top = 48
+  end
+  object dlgOpen: TFileOpenDialog
+    FavoriteLinks = <>
+    FileTypes = <>
+    Options = [fdoPathMustExist, fdoFileMustExist]
+    Left = 352
     Top = 104
   end
 end

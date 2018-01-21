@@ -92,7 +92,7 @@
         <AppEnableHighDPI>true</AppEnableHighDPI>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Icon_MainIcon>GitEditor.ico</Icon_MainIcon>
-        <Debugger_RunParams>D:\HoylD\TakeCommand\TCMD21\4Start.btm</Debugger_RunParams>
+        <Debugger_RunParams>&quot;Test Text File.md&quot;</Debugger_RunParams>
         <Debugger_CWD>D:\HoylD\RAD Studio\Applications\Git Editor\</Debugger_CWD>
         <DCC_Define>CODESITE;EUREKALOG;EUREKALOG_VER7;$(DCC_Define)</DCC_Define>
         <DCC_MapFile>3</DCC_MapFile>
