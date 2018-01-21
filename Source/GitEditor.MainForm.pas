@@ -44,7 +44,11 @@ Uses
   SynEdit,
   SynHighlighterMD,
   SynEditHighlighter,
-  SynHighlighterBNF, Vcl.AppEvnts;
+  SynHighlighterBNF,
+  Vcl.AppEvnts,
+  SynEditMiscClasses,
+  SynEditRegexSearch, 
+  GitEditor.SearchReplaceForm, SynEditSearch;
 
 Type
   (** A class to represent the main form of the aplpication - a single window editor. **)
@@ -91,6 +95,9 @@ Type
     dlgTask: TTaskDialog;
     dlgSave: TFileSaveDialog;
     dlgOpen: TFileOpenDialog;
+    seRegexSearch: TSynEditRegexSearch;
+    seSearch: TSynEditSearch;
+    actEditFindNext: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -106,10 +113,14 @@ Type
     procedure actEditFindExecute(Sender: TObject);
     procedure actEditReplaceExecute(Sender: TObject);
     procedure aeEventsHint(Sender: TObject);
+    procedure actEditFindNextExecute(Sender: TObject);
   Strict Private
-    FIniFile : String;
-    FEditor : TSynEdit;
-    FFileName : String;
+    FIniFile       : String;
+    FEditor        : TSynEdit;
+    FFileName      : String;
+    FSearch        : String;
+    FReplace       : String;
+    FSearchOptions : TSearchOptions;
   Strict Protected
     Procedure LoadSettings;
     Procedure SaveSettings;
@@ -120,6 +131,9 @@ Type
     Procedure HookHighlighter;
     Function  SaveFile(Const strFileName : String) : Boolean;
     Function  SaveFileAs(Const strFileName : String) : Boolean;
+    Procedure SearchMessage(Const strMsg : String);
+    Procedure EditorReplaceText(Sender: TObject; Const ASearch, AReplace: String; Line, Column: Integer;
+      Var Action: TSynReplaceAction);
   Public
   End;
 
@@ -143,7 +157,8 @@ Uses
   GitEditor.CommonFunctions,
   SynEditKeyCmds, 
   GitEditor.SynEditOptionsForm, 
-  GitEditor.SynHighlighterUtils;
+  GitEditor.SynHighlighterUtils, 
+  SynEditTypes;
 
 Type
   (** An enumerate to define the statusbar columns. @nohints **)
@@ -184,6 +199,8 @@ Const
   strWidth = 'Width';
   (** A constant for the default Open / Save dialogue file extension. **)
   strDefaultExt = '*.txt';
+  (** An ini section for the search options. **)
+  strSearchOptionsIniSection = 'Search Options';
 
 (**
 
@@ -198,6 +215,7 @@ Const
 Function TGEStatusColumnHelper.ColumnIndex: Integer;
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod('TGEStatusColumnHelper.ColumnIndex', tmoTiming);{$ENDIF}
   Result := Integer(Self);
 End;
 
@@ -220,6 +238,7 @@ Var
   B : TTaskDialogBaseButtonItem;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'AddButton', tmoTiming);{$ENDIF}
   B := Buttons.Add;
   B.Caption := strCaption;
   B.ModalResult := iModalResult;
@@ -239,8 +258,38 @@ End;
 Procedure TfrmGEMainForm.actEditFindExecute(Sender: TObject);
 
 Begin
-  ShowMessage('NOT IMPLEMENTED YET!');
-  //: @todo Implement Find
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actEditFindExecute', tmoTiming);{$ENDIF}
+  SearchFind(Self, FEditor, SearchMessage, FSearch, FReplace, FSearchOptions, seRegexSearch, seSearch,
+    FINIFile);
+End;
+
+(**
+
+  This is an on execute event handler for the Edit Find Next action.
+
+  @precon  None.
+  @postcon Finds the next occurrance of the last search text.
+
+  @param   Sender as a TObject
+
+**)
+Procedure TfrmGEMainForm.actEditFindNextExecute(Sender: TObject);
+
+Var
+  SO : TSearchOptions;
+  
+Begin
+  SO := FSearchOptions;
+  Try
+    Exclude(FSearchOptions, soBackward);
+    If FSearch <> '' Then
+      SearchFindNext(FEditor, SearchMessage, FSearch, FReplace, FSearchOptions, seRegexSearch, seSearch)
+    Else
+      SearchFind(Self, FEditor, SearchMessage, FSearch, FReplace, FSearchOptions, seRegexSearch,
+        seSearch, FINIFile);
+  Finally
+    FSearchOptions := SO;
+  End;
 End;
 
 (**
@@ -256,6 +305,7 @@ End;
 Procedure TfrmGEMainForm.actEditRedoExecute(Sender: TObject);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actEditRedoExecute', tmoTiming);{$ENDIF}
   FEditor.Redo();
 End;
 
@@ -272,6 +322,7 @@ End;
 Procedure TfrmGEMainForm.actEditRedoUpdate(Sender: TObject);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actEditRedoUpdate', tmoTiming);{$ENDIF}
   If Sender Is TAction Then
     (Sender As TAction).Enabled := FEditor.CanRedo;
 End;
@@ -289,8 +340,9 @@ End;
 Procedure TfrmGEMainForm.actEditReplaceExecute(Sender: TObject);
 
 Begin
-  ShowMessage('NOT IMPLEMENTED YET!');
-  //: @todo Implement Replace
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actEditReplaceExecute', tmoTiming);{$ENDIF}
+  SearchReplace(Self, FEditor, SearchMessage, FSearch, FReplace, FSearchOptions, seRegexSearch, seSearch,
+    FINIFile);
 End;
 
 (**
@@ -306,6 +358,7 @@ End;
 Procedure TfrmGEMainForm.actFileExitExecute(Sender: TObject);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileExitExecute', tmoTiming);{$ENDIF}
   Close;
 End;
 
@@ -322,6 +375,7 @@ End;
 Procedure TfrmGEMainForm.actFileNewExecute(Sender: TObject);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileNewExecute', tmoTiming);{$ENDIF}
   SaveFile(FFileName);
   FFileName := ExpandFileName(strUntitled);
   FEditor.Clear;
@@ -352,6 +406,7 @@ Var
   FTI : TFileTypeItem;
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileOpenExecute', tmoTiming);{$ENDIF}
   If SaveFile(FFileName) Then
     Begin
       dlgOpen.DefaultExtension := strDefaultExt;
@@ -393,6 +448,7 @@ End;
 Procedure TfrmGEMainForm.actFileSaveAsExecute(Sender: TObject);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileSaveAsExecute', tmoTiming);{$ENDIF}
   SaveFileAs(FFileName);
 End;
 
@@ -409,6 +465,7 @@ End;
 Procedure TfrmGEMainForm.actFileSaveExecute(Sender: TObject);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileSaveExecute', tmoTiming);{$ENDIF}
   SaveFile(FFileName);
 End;
 
@@ -425,6 +482,7 @@ End;
 Procedure TfrmGEMainForm.actFileSaveUpdate(Sender: TObject);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileSaveUpdate', tmoTiming);{$ENDIF}
   If Sender Is Taction Then
     (Sender As TAction).Enabled := FEditor.Modified;
 End;
@@ -442,6 +500,7 @@ End;
 Procedure TfrmGEMainForm.actToolsOptionsExecute(Sender: TObject);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actToolsOptionsExecute', tmoTiming);{$ENDIF}
   TfrmEditorOptions.Execute(Self, FEditor, True);
 End;
 
@@ -458,6 +517,7 @@ End;
 Procedure TfrmGEMainForm.aeEventsHint(Sender: TObject);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'aeEventsHint', tmoTiming);{$ENDIF}
   sbrStatusBar.SimplePanel := Application.Hint <> '';
   sbrStatusBar.SimpleText  := Application.Hint;
 End;
@@ -477,6 +537,7 @@ Const
   iDefaultFontheight = -11;
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'CreateEditor', tmoTiming);{$ENDIF}
   FEditor := TSynEdit.Create(Self);
   FEditor.Parent := Self;
   FEditor.Align := alClient;
@@ -493,9 +554,33 @@ Begin
   FEditor.AddKey(ecScrollRight, VK_RIGHT, [ssAlt], 0, []);
   FEditor.AddKey(ecCommentBlock, Ord('C'), [ssAlt, ssCtrl], 0, []);
   FEditor.AddKey(ecAutoCompletion, Ord('J'), [ssCtrl], 0, []);
+  FEditor.SearchEngine := seRegexSearch;
   FEditor.PopupMenu := pabrContextMenu;
   FEditor.OnStatusChange := EditorStatusChange;
+  FEditor.OnReplaceText := EditorReplaceText;
   EditorStatusChange(Self, [scAll]);
+End;
+
+(**
+
+  This method haves the prompting for the replacement of text.
+
+  @precon  None.
+  @postcon A confirmtion dialogue is displayed for replacements.
+
+  @param   Sender   as a TObject
+  @param   ASearch  as a String as a constant
+  @param   AReplace as a String as a constant
+  @param   Line     as an Integer
+  @param   Column   as an Integer
+  @param   Action   as a TSynReplaceAction as a reference
+
+**)
+Procedure TfrmGEMainForm.EditorReplaceText(Sender: TObject; Const ASearch, AReplace: String; Line,
+  Column: Integer; Var Action: TSynReplaceAction);
+
+Begin
+  SearchReplaceText(FEditor, ASearch, AReplace, Line, Column, Action);
 End;
 
 (**
@@ -517,6 +602,7 @@ ResourceString
   strModified = 'Modified';
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'EditorStatusChange', tmoTiming);{$ENDIF}
   sbrStatusbar.Panels[scCaret.ColumnIndex].Text := Format('%1.0n:%1.0n', [Int(FEditor.CaretY),
     Int(FEditor.CaretX)]);
   sbrStatusbar.Panels[scInsert.ColumnIndex].Text := IfThen(FEditor.InsertMode, strInsert, strOverwrite);
@@ -547,6 +633,7 @@ ResourceString
   strCancelAndDonCloseEditor = 'Cancel and don''t close the editor';
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormCloseQuery', tmoTiming);{$ENDIF}
   If FEditor.Modified Then
     Begin
       dlgTask.Title := strModifiedFile;
@@ -587,6 +674,7 @@ Var
   strFileName : String;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormCreate', tmoTiming);{$ENDIF}
   SetLength(strBuffer, MAX_PATH);
   iSize := GetModuleFileName(HInstance, PChar(strBuffer), MAX_PATH);
   SetLength(strBuffer, iSize);
@@ -621,6 +709,7 @@ End;
 Procedure TfrmGEMainForm.FormDestroy(Sender: TObject);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormDestroy', tmoTiming);{$ENDIF}
   SaveSettings;
   SaveToINIFile(FIniFile, FEditor);
 End;
@@ -656,6 +745,7 @@ Procedure TfrmGEMainForm.HookHighlighter;
     i : Integer;
   
   Begin
+    {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'HookHighlighter/IterateHighlighters', tmoTiming);{$ENDIF}
     For iComponent := 0 To ComponentCount - 1 Do
       Begin
         If Components[iComponent] Is TSynCustomHighlighter Then
@@ -681,6 +771,7 @@ Var
   strExt : String;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'HookHighlighter', tmoTiming);{$ENDIF}
   FEditor.Highlighter := Nil;
   sbrStatusbar.Panels[scFileType.ColumnIndex].Text := strPlainTextFiles;
   strExt := LowerCase(ExtractFileExt(FFileName));
@@ -702,16 +793,26 @@ End;
 **)
 Procedure TfrmGEMainForm.LoadSettings;
 
+Const
+  DefaultOptions : TSearchOptions = [soPrompt, soEntireScope];
+
 Var
   iniFile : TCustomIniFile;
+  iOp: TSearchOption;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'LoadSettings', tmoTiming);{$ENDIF}
   iniFile := TMemIniFile.Create(FIniFile);
   Try
     Left := iniFile.ReadInteger(strWindowPosition, strLeft, Left);
     Top := iniFile.ReadInteger(strWindowPosition, strTop, Top);
     Height := iniFile.ReadInteger(strWindowPosition, strHeight, Height);
     Width := iniFile.ReadInteger(strWindowPosition, strWidth, Width);
+    FSearchOptions := [];
+    For iOp := Low(TSearchOption) To High(TSearchOption) Do
+      If iniFile.ReadBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
+        iOp In DefaultOptions) Then
+        Include(FSearchOptions, iOp);
   Finally
     iniFile.Free;
   End;
@@ -741,6 +842,7 @@ Var
   sl : TStringList;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'OpenFile', tmoTiming);{$ENDIF}
   FFileName := strFileName;
   If FileExists(FFileName) Then
     FEditor.Lines.LoadFromFile(FFileName)
@@ -796,6 +898,7 @@ End;
 Function TfrmGEMainForm.SaveFile(Const strFileName : String) : Boolean;
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'SaveFile', tmoTiming);{$ENDIF}
   If FEditor.Modified Then
     Begin
       If FileExists(FFileName) Then
@@ -832,6 +935,7 @@ Var
   FTI : TFileTypeItem;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'SaveFileAs', tmoTiming);{$ENDIF}
   dlgSave.DefaultExtension := ExtractFileExt(strFileName);
   If dlgSave.DefaultExtension = '' Then
     dlgSave.DefaultExtension := strDefaultExt;
@@ -873,18 +977,39 @@ Procedure TfrmGEMainForm.SaveSettings;
 
 Var
   iniFile : TCustomIniFile;
+  iOp : TSearchOption;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'SaveSettings', tmoTiming);{$ENDIF}
   iniFile := TMemIniFile.Create(FIniFile);
   Try
     iniFile.WriteInteger(strWindowPosition, strLeft, Left);
     iniFile.WriteInteger(strWindowPosition, strTop, Top);
     iniFile.WriteInteger(strWindowPosition, strHeight, Height);
     iniFile.WriteInteger(strWindowPosition, strWidth, Width);
+    For iOp := Low(TSearchOption) To High(TSearchOption) Do
+      iniFile.WriteBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
+        iOp In FSearchOptions);
     iniFile.UpdateFile;
   Finally
     iniFile.Free;
   End;
+End;
+
+(**
+
+  This method displays a message.
+
+  @precon  None.
+  @postcon The message is displayed
+
+  @param   strMsg as a String as a constant
+
+**)
+Procedure TfrmGEMainForm.SearchMessage(Const strMsg: String);
+
+Begin
+  TaskMessageDlg(Application.Title, strMsg, mtInformation, [mbOK], 0);
 End;
 
 (**
@@ -907,6 +1032,7 @@ Var
   BuildInfo : TGEBuildInfo;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'UpdateCaption', tmoTiming);{$ENDIF}
   GetBuildInfo(BuildInfo);
   Caption := Format(strGitEditorBuild, [
       BuildInfo.FMajor,

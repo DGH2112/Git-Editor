@@ -347,6 +347,13 @@ object frmGEMainForm: TfrmGEMainForm
       ShortCut = 16454
       OnExecute = actEditFindExecute
     end
+    object actEditFindNext: TAction
+      Category = 'Edit'
+      Caption = 'Find &Next'
+      Hint = 'Find Next|Find The next occurrance of the previous search...'
+      ShortCut = 16460
+      OnExecute = actEditFindNextExecute
+    end
     object actEditReplace: TAction
       Category = 'Edit'
       Caption = '&Replace...'
@@ -1100,5 +1107,13 @@ object frmGEMainForm: TfrmGEMainForm
     Options = [fdoPathMustExist, fdoFileMustExist]
     Left = 352
     Top = 104
+  end
+  object seRegexSearch: TSynEditRegexSearch
+    Left = 432
+    Top = 104
+  end
+  object seSearch: TSynEditSearch
+    Left = 432
+    Top = 48
   end
 end

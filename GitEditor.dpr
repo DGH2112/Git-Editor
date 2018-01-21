@@ -1,4 +1,16 @@
-program GitEditor;
+(**
+  
+  This project is a simple lightweight text editor (single window) for use with Git or for simple and
+  quick tetx edit changes.
+
+  @Author  David Hoyle
+  @Version 1.0
+  @Date    21 Jan 2018
+
+  @nocheck HardCodedString
+  
+**)
+Program GitEditor;
 
 {$R 'GitEditorITHVerInfo.res' 'GitEditorITHVerInfo.RC'}
 
@@ -24,11 +36,14 @@ uses
   SynHighlighterRegEx in '..\..\Components\Source\SynHighlighterRegEx.pas',
   GitEditor.CommonFunctions in 'Source\GitEditor.CommonFunctions.pas',
   GitEditor.SynEditOptionsForm in 'Source\GitEditor.SynEditOptionsForm.pas' {frmEditorOptions},
-  GitEditor.SynHighlighterUtils in 'Source\GitEditor.SynHighlighterUtils.pas';
+  GitEditor.SynHighlighterUtils in 'Source\GitEditor.SynHighlighterUtils.pas',
+  GitEditor.SearchReplaceForm in 'Source\GitEditor.SearchReplaceForm.pas' {frmSearchAndReplace},
+  GitEditor.ConfirmationDlgForm in 'Source\GitEditor.ConfirmationDlgForm.pas' {frmConfirmationDlg};
 
 {$R *.res}
 
-begin
+
+Begin
   ReportMemoryLeaksOnShutdown := DebugHook <> 0;
   {$IFDEF EurekaLog}
   SetEurekaLogState(DebugHook = 0);
@@ -38,4 +53,4 @@ begin
   Application.Title := 'Git Editor';
   Application.CreateForm(TfrmGEMainForm, frmGEMainForm);
   Application.Run;
-end.
+End.
