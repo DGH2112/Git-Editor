@@ -132,6 +132,9 @@ Implementation
 {$R *.dfm}
 
 Uses
+  {$IFDEF CODESITE}
+  CodeSiteLogging,
+  {$ENDIF}
   System.StrUtils,
   System.IniFiles, 
   System.UITypes,
@@ -149,6 +152,12 @@ Type
   TGEStatusColumnHelper = Record Helper For TGEStatusColumn
     Function ColumnIndex : Integer;
   End;
+  (** A helper class for task dialogues to make it easier to intialise the dialogue and added button
+      @nohints **)
+  TGETaskDialogHelper = Class Helper For TTaskDialog
+    Procedure AddButton(Const strCaption : String; Const iModalResult : TModalResult;
+      Const boolDefault : Boolean = False);
+  End;
   
 ResourceString
   (** A string constant for the Window Position INI Section **)
@@ -157,10 +166,6 @@ ResourceString
   strINIPattern = '%s Settings for %s on %s.INI';
   (** A string constant for the profile sub-directory for storing the INI file. **)
   strSeasonsFall = '\Season''s Fall\';
-  (** A resource string for prompting the user to save the file. **)
-  strSaveFile = 'The file "%s" you are editing has changed! Would you like to save the changed?';
-  (** A resource string for a filel not found. **)
-  strFileNotFound = 'The file "%s" was not found!';
   (** Default filename. **)
   strUntitled = 'Untitled.txt';
   (** A filter description and file extensions for text files. **)
@@ -194,6 +199,31 @@ Function TGEStatusColumnHelper.ColumnIndex: Integer;
 
 Begin
   Result := Integer(Self);
+End;
+
+(**
+
+  This method adds a button to the Task Dialog.
+
+  @precon  None.
+  @postcon A button is added to the task dialog with the given caption and modal result.
+
+  @param   strCaption   as a String as a constant
+  @param   iModalResult as a TModalResult as a constant
+  @param   boolDefault  as a Boolean as a constant
+
+**)
+Procedure TGETaskDialogHelper.AddButton(Const strCaption: String; Const iModalResult: TModalResult;
+  Const boolDefault: Boolean);
+
+Var
+  B : TTaskDialogBaseButtonItem;
+  
+Begin
+  B := Buttons.Add;
+  B.Caption := strCaption;
+  B.ModalResult := iModalResult;
+  B.Default := boolDefault;
 End;
 
 (**
@@ -509,12 +539,33 @@ End;
 **)
 Procedure TfrmGEMainForm.FormCloseQuery(Sender: TObject; Var CanClose: Boolean);
 
+ResourceString
+  strModifiedFile = 'Modified File';
+  strFileHasBeenModified = 'The file "%s" has been modified!';
+  strSaveChangesToFile = 'Save the changes to the file "%s"';
+  strDiscardChangesToFile = 'Discard the changes to the file "%s"';
+  strCancelAndDonCloseEditor = 'Cancel and don''t close the editor';
+
 Begin
   If FEditor.Modified Then
-    Case MessageDlg(Format(strSaveFile, [FFileName]), mtConfirmation, [mbYes, mbNo, mbCancel], 0) Of
-      mrYes:    CanClose := SaveFile(FFileName);
-      mrNo:     CanClose := true;
-      mrCancel: CanClose := false;
+    Begin
+      dlgTask.Title := strModifiedFile;
+      dlgTask.Caption := Application.Title;
+      dlgTask.Flags := [tfUseHiconMain, tfAllowDialogCancellation, tfUseCommandLinks];
+      dlgTask.MainIcon := tdiWarning;
+      dlgTask.Text := Format(strFileHasBeenModified, [FFileName]);
+      dlgTask.CommonButtons := [];
+      dlgTask.Buttons.Clear;
+      dlgTask.AddButton(Format(strSaveChangesToFile, [FFileName]), mrYes, True);
+      dlgTask.AddButton(Format(strDiscardChangesToFile, [FFileName]), mrNo);
+      dlgTask.AddButton(strCancelAndDonCloseEditor, mrCancel);
+      If dlgTask.Execute(Handle) Then
+        Case dlgTask.ModalResult Of
+          mrYes:    CanClose := SaveFile(FFileName);
+          mrNo:     CanClose := true;
+          mrCancel: CanClose := false;
+        End Else
+          CanClose := False;
     End;
 End;
 
@@ -680,7 +731,11 @@ End;
 Procedure TfrmGEMainForm.OpenFile(Const strFileName : String);
 
 ResourceString
-  strCreateMsg = 'The file "%s" does not exist! Would you like to create this file?';
+  strCreateTextFile = 'Create a Text File';
+  strFileDoesNotExist = 'The file "%s" does not exist!';
+  strCreateFile = 'Create the file "%s"?';
+  strDoNOTCreateFile = 'Do NOT create the file "%s"!';
+  strFileNotFound = 'The file "%s" was not found (the directory does not exist)!';
 
 Var
   sl : TStringList;
@@ -693,17 +748,28 @@ Begin
     Begin
       If DirectoryExists(ExtractFilePath(FFileName)) Then
         Begin
-          Case MessageDlg(Format(strCreateMsg , [FFileName]), mtConfirmation, [mbYes, mbNo], 0) Of
-            mrYes:
-              Begin
-                sl := TStringList.Create;
-                Try
-                  sl.SaveToFile(FFileName);
-                Finally
-                  sl.Free;
+          dlgTask.Title := strCreateTextFile;
+          dlgTask.Caption := Application.Title;
+          dlgTask.Flags := [tfUseHiconMain, tfAllowDialogCancellation, tfUseCommandLinks];
+          dlgTask.MainIcon := tdiInformation;
+          dlgTask.Text := Format(strFileDoesNotExist, [FFileName]);
+          dlgTask.CommonButtons := [];
+          dlgTask.Buttons.Clear;
+          dlgTask.AddButton(Format(strCreateFile, [FFileName]), mrYes, True);
+          dlgTask.AddButton(Format(strDoNOTCreateFile, [FFileName]), mrNo);
+          If dlgTask.Execute(handle) Then
+            Case dlgTask.ModalResult Of
+              mrYes:
+                Begin
+                  sl := TStringList.Create;
+                  Try
+                    sl.SaveToFile(FFileName);
+                  Finally
+                    sl.Free;
+                  End;
                 End;
-              End;
-          End;
+              mrNo: FFileName := ExpandFileName(strUntitled)
+            End;
         End Else
         Begin
           TaskMessageDlg(Application.Title, Format(strFileNotFound, [FFileName]), mtError, [mbOK], 0);

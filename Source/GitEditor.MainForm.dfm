@@ -1082,6 +1082,7 @@ object frmGEMainForm: TfrmGEMainForm
   end
   object dlgTask: TTaskDialog
     Buttons = <>
+    Flags = [tfUseHiconMain, tfUseHiconFooter, tfAllowDialogCancellation, tfUseCommandLinks, tfExpandFooterArea, tfExpandedByDefault]
     RadioButtons = <>
     Left = 352
     Top = 160
