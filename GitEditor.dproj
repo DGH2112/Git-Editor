@@ -60,7 +60,7 @@
         <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
         <SanitizedProjectName>GitEditor</SanitizedProjectName>
         <DCC_ShowGeneralMessages>true</DCC_ShowGeneralMessages>
-        <DCC_UnitSearchPath>D:\HoylD\RAD Studio\Library\SynEdit 2.1.0\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>D:\HoylD\RAD Studio\Library\SynEdit 2.1.0\Source;D:\HoylD\RAD Studio\Components\DGHCustomSynEditControls\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_Locale>2057</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
@@ -82,7 +82,6 @@
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
-        <DCC_RemoteDebug>true</DCC_RemoteDebug>
         <DCC_RangeChecking>true</DCC_RangeChecking>
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
     </PropertyGroup>
@@ -108,6 +107,10 @@
         <AppEnableHighDPI>true</AppEnableHighDPI>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Icon_MainIcon>GitEditor.ico</Icon_MainIcon>
+        <DCC_MapFile>3</DCC_MapFile>
+        <DCC_DebugInformation>2</DCC_DebugInformation>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_Define>EUREKALOG;EUREKALOG_VER7;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -120,23 +123,7 @@
             <Form>frmGEMainForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\Components\Source\SynHighlighterBNF.pas"/>
-        <DCCReference Include="..\..\Components\Source\SynHighlighterMD.pas"/>
-        <DCCReference Include="..\..\Components\Source\SynHighlighterRegEx.pas"/>
         <DCCReference Include="Source\GitEditor.CommonFunctions.pas"/>
-        <DCCReference Include="Source\GitEditor.SynEditOptionsForm.pas">
-            <Form>frmEditorOptions</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="Source\GitEditor.SynHighlighterUtils.pas"/>
-        <DCCReference Include="Source\GitEditor.SearchReplaceForm.pas">
-            <Form>frmSearchAndReplace</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="Source\GitEditor.ConfirmationDlgForm.pas">
-            <Form>frmConfirmationDlg</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

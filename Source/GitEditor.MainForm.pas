@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    21 Jan 2018
+  @Date    26 Jan 2018
   
 **)
 Unit GitEditor.MainForm;
@@ -48,7 +48,8 @@ Uses
   Vcl.AppEvnts,
   SynEditMiscClasses,
   SynEditRegexSearch, 
-  GitEditor.SearchReplaceForm, SynEditSearch;
+  SynEditSearchReplaceForm,
+  SynEditSearch;
 
 Type
   (** A class to represent the main form of the aplpication - a single window editor. **)
@@ -156,8 +157,8 @@ Uses
   WinAPI.SHFolder,
   GitEditor.CommonFunctions,
   SynEditKeyCmds, 
-  GitEditor.SynEditOptionsForm, 
-  GitEditor.SynHighlighterUtils, 
+  SynEditOptionsForm, 
+  SynHighlighterUtils, 
   SynEditTypes;
 
 Type

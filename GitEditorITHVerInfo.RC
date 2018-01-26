@@ -1,8 +1,8 @@
 LANGUAGE LANG_ENGLISH,SUBLANG_ENGLISH_US
 
 1 VERSIONINFO LOADONCALL MOVEABLE DISCARDABLE IMPURE
-FILEVERSION 1, 0, 0, 104
-PRODUCTVERSION 1, 0, 0, 104
+FILEVERSION 1, 0, 0, 108
+PRODUCTVERSION 1, 0, 0, 108
 FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 FILEOS VOS__WINDOWS32
 FILETYPE VFT_APP
@@ -13,7 +13,7 @@ FILETYPE VFT_APP
     {
       VALUE "CompanyName", "Season's Fall Music\000"
       VALUE "FileDescription", "GitEditor: A simple syntax highlighted text editor for files.\000"
-      VALUE "FileVersion", "1.0.0.104\000"
+      VALUE "FileVersion", "1.0.0.108\000"
       VALUE "InternalName", "GitEditor\000"
       VALUE "LegalCopyright", "Season's Fall Music\000"
       VALUE "LegalTrademarks", "Season's Fall Music\000"

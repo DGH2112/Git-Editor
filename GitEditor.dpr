@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    21 Jan 2018
+  @Date    26 Jan 2018
 
   @nocheck HardCodedString
   
@@ -31,14 +31,7 @@ uses
   {$ENDIF EurekaLog}
   Vcl.Forms,
   GitEditor.MainForm in 'Source\GitEditor.MainForm.pas' {frmGEMainForm},
-  SynHighlighterBNF in '..\..\Components\Source\SynHighlighterBNF.pas',
-  SynHighlighterMD in '..\..\Components\Source\SynHighlighterMD.pas',
-  SynHighlighterRegEx in '..\..\Components\Source\SynHighlighterRegEx.pas',
-  GitEditor.CommonFunctions in 'Source\GitEditor.CommonFunctions.pas',
-  GitEditor.SynEditOptionsForm in 'Source\GitEditor.SynEditOptionsForm.pas' {frmEditorOptions},
-  GitEditor.SynHighlighterUtils in 'Source\GitEditor.SynHighlighterUtils.pas',
-  GitEditor.SearchReplaceForm in 'Source\GitEditor.SearchReplaceForm.pas' {frmSearchAndReplace},
-  GitEditor.ConfirmationDlgForm in 'Source\GitEditor.ConfirmationDlgForm.pas' {frmConfirmationDlg};
+  GitEditor.CommonFunctions in 'Source\GitEditor.CommonFunctions.pas';
 
 {$R *.res}
 
