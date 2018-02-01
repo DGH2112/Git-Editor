@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    26 Jan 2018
+  @Date    01 Feb 2018
   
 **)
 Unit GitEditor.MainForm;
@@ -601,13 +601,15 @@ ResourceString
   strInsert = 'Insert';
   strOverwrite = 'Overwrite';
   strModified = 'Modified';
+  strReadOnly = 'Read Only';
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'EditorStatusChange', tmoTiming);{$ENDIF}
   sbrStatusbar.Panels[scCaret.ColumnIndex].Text := Format('%1.0n:%1.0n', [Int(FEditor.CaretY),
     Int(FEditor.CaretX)]);
   sbrStatusbar.Panels[scInsert.ColumnIndex].Text := IfThen(FEditor.InsertMode, strInsert, strOverwrite);
-  sbrStatusbar.Panels[scModified.ColumnIndex].Text := IfThen(FEditor.Modified, strModified);
+  sbrStatusbar.Panels[scModified.ColumnIndex].Text := IfThen(FEditor.Modified, strModified,
+    IfThen(FEditor.ReadOnly, strReadOnly));
 End;
 
 (**
@@ -846,8 +848,10 @@ Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'OpenFile', tmoTiming);{$ENDIF}
   FFileName := strFileName;
   If FileExists(FFileName) Then
-    FEditor.Lines.LoadFromFile(FFileName)
-  Else
+    Begin
+      FEditor.Lines.LoadFromFile(FFileName);
+      FEditor.ReadOnly := (GetFileAttributes(PChar(FFileName)) And FILE_ATTRIBUTE_READONLY <> 0);
+    End Else
     Begin
       If DirectoryExists(ExtractFilePath(FFileName)) Then
         Begin
@@ -882,6 +886,7 @@ Begin
   UpdateCaption;
   HookHighlighter;
   LoadFromINIFile(FIniFile, FEditor);
+  
 End;
 
 (**
