@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    01 Feb 2018
+  @Date    09 Feb 2018
   
 **)
 Unit GitEditor.MainForm;
@@ -163,7 +163,14 @@ Uses
 
 Type
   (** An enumerate to define the statusbar columns. @nohints **)
-  TGEStatusColumn = (scCaret, scInsert, scModified, scFileType);
+  TGEStatusColumn = (
+    scCaret,
+    scInsert,
+    scModified,
+    scLines,
+    scSize,
+    scFileType
+  );
   (** A record helper to convert the above enumerate to column indexes. @nohints **)
   TGEStatusColumnHelper = Record Helper For TGEStatusColumn
     Function ColumnIndex : Integer;
@@ -602,6 +609,11 @@ ResourceString
   strOverwrite = 'Overwrite';
   strModified = 'Modified';
   strReadOnly = 'Read Only';
+  strLines = '%1.0n Lines';
+  strKBytes = '%1.1n KBytes';
+
+Const
+  dblKBytes = 1024.0;
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'EditorStatusChange', tmoTiming);{$ENDIF}
@@ -610,6 +622,9 @@ Begin
   sbrStatusbar.Panels[scInsert.ColumnIndex].Text := IfThen(FEditor.InsertMode, strInsert, strOverwrite);
   sbrStatusbar.Panels[scModified.ColumnIndex].Text := IfThen(FEditor.Modified, strModified,
     IfThen(FEditor.ReadOnly, strReadOnly));
+  sbrStatusbar.Panels[scLines.ColumnIndex].Text := Format(strLines, [Int(FEditor.Lines.Count)]);
+  sbrStatusbar.Panels[scSize.ColumnIndex].Text := Format(strKBytes, [
+    Int(Length(FEditor.Lines.Text)) / dblKBytes]);
 End;
 
 (**
@@ -883,6 +898,7 @@ Begin
           FFileName := ExpandFileName(strUntitled)
         End;
     End;
+  EditorStatusChange(Nil, [scAll]);
   UpdateCaption;
   HookHighlighter;
   LoadFromINIFile(FIniFile, FEditor);

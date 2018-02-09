@@ -63,6 +63,14 @@ object frmGEMainForm: TfrmGEMainForm
       end
       item
         Alignment = taCenter
+        Width = 100
+      end
+      item
+        Alignment = taCenter
+        Width = 125
+      end
+      item
+        Alignment = taCenter
         Width = 150
       end
       item
@@ -366,7 +374,7 @@ object frmGEMainForm: TfrmGEMainForm
     Left = 80
     Top = 104
     Bitmap = {
-      494C010110001800B80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110001800BC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
