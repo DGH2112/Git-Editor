@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    09 Feb 2018
+  @Date    11 Feb 2018
   
 **)
 Unit GitEditor.MainForm;
@@ -49,7 +49,7 @@ Uses
   SynEditMiscClasses,
   SynEditRegexSearch, 
   SynEditSearchReplaceForm,
-  SynEditSearch;
+  SynEditSearch, Vcl.ExtCtrls;
 
 Type
   (** A class to represent the main form of the aplpication - a single window editor. **)
@@ -99,6 +99,7 @@ Type
     seRegexSearch: TSynEditRegexSearch;
     seSearch: TSynEditSearch;
     actEditFindNext: TAction;
+    tmMemory: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -115,6 +116,12 @@ Type
     procedure actEditReplaceExecute(Sender: TObject);
     procedure aeEventsHint(Sender: TObject);
     procedure actEditFindNextExecute(Sender: TObject);
+    procedure tmMemoryTimer(Sender: TObject);
+    procedure sbrStatusbarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel; const Rect: TRect);
+  Strict Private
+    Type
+      (** An enumerate to define the blocks of memory. @nohints **)
+      TMemorySize = (dmtLarge, dmtMedium, dmtSmall);
   Strict Private
     FIniFile       : String;
     FEditor        : TSynEdit;
@@ -122,6 +129,10 @@ Type
     FSearch        : String;
     FReplace       : String;
     FSearchOptions : TSearchOptions;
+    FUsed          : NativeUInt;
+    FReserved      : NativeUInt;
+    FMemoryBlock   : Array[Low(TMemorySize)..High(TMemorySize)] Of Cardinal;
+    FPercentage    : Double;
   Strict Protected
     Procedure LoadSettings;
     Procedure SaveSettings;
@@ -169,7 +180,8 @@ Type
     scModified,
     scLines,
     scSize,
-    scFileType
+    scFileType,
+    scMemoryUseage
   );
   (** A record helper to convert the above enumerate to column indexes. @nohints **)
   TGEStatusColumnHelper = Record Helper For TGEStatusColumn
@@ -209,6 +221,39 @@ Const
   strDefaultExt = '*.txt';
   (** An ini section for the search options. **)
   strSearchOptionsIniSection = 'Search Options';
+
+(**
+
+  This function calculates a shorter representation of a memory size and returns a string representing 
+  the value.
+
+  @precon  None.
+  @postcon Returns a string representation of the given size.
+
+  @param   iSize as a Cardinal as a constant
+  @return  a String
+
+**)
+Function CalcSize(Const iSize: Cardinal): String;
+
+ResourceString
+  strUnknown = 'Unknown';
+
+Const
+  dblKILOBYTE: Double = 1024.0;
+  dblMEGABYTE: Double = 1024.0 * 1024.0;
+  strKiloBytes = '%1.2nK';
+  strMegaBytes = '%1.2nM';
+
+Begin
+  Result := strUnknown;
+  If iSize < dblKILOBYTE Then
+    Result := Format('%1.0n', [Int(iSize)])
+  Else If iSize < dblMEGABYTE Then
+    Result := Format(strKiloBytes, [Int(iSize) / dblKILOBYTE])
+  Else
+    Result := Format(strMegaBytes, [Int(iSize) / dblMEGABYTE])
+End;
 
 (**
 
@@ -1020,6 +1065,74 @@ End;
 
 (**
 
+  This is an on draw event handler for the statusbar panels.
+
+  @precon  None.
+  @postcon Draws the memory useage.
+
+  @nocheck MissingConstInParam
+  @nohint  Panel
+
+  @param   StatusBar as a TStatusBar
+  @param   Panel     as a TStatusPanel
+  @param   Rect      as a TRect as a constant
+
+**)
+Procedure TfrmGEMainForm.sbrStatusbarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
+  Const Rect: TRect);
+
+Const
+  iMargin = 2;
+  iLightRed = $8080FF;
+  iLightGreen = $80FF80;
+  dblPercentageMulitplier = 100.0;
+
+ResourceString
+  strFullStatus = 'Used %s in %s bytes (%1.1n%%) [Blocks: %dL, %dM, %dS]';
+  strMediumStatus = 'Used %s in %s bytes (%1.1n%%)';
+  strSmallerStatus = '%s in %s (%1.1n%%)';
+  strMinimumStatus = '%s (%1.1n%%)';
+
+Var
+  R, T : TRect;
+  strU, strR, strStatus : String;
+  
+Begin
+  R := Rect;
+  // Render Background
+  StatusBar.Canvas.Brush.Color := iLightRed;
+  StatusBar.Canvas.FillRect(R);
+  StatusBar.Canvas.Font.Color := clBlack;
+  // Write Background text
+  strU      := CalcSize(FUsed);
+  strR      := CalcSize(FReserved);
+  strStatus := Format(strFullStatus,
+    [strU, strR, Int(FPercentage), FMemoryBlock[dmtLarge], FMemoryBlock[dmtMedium],
+      FMemoryBlock[dmtSmall]]);
+  If StatusBar.Canvas.TextWidth(strStatus) > R.Right - R.Left - iMargin Then
+    strStatus := Format(strMediumStatus, [strU, strR, Int(FPercentage)]);
+  If StatusBar.Canvas.TextWidth(strStatus) > R.Right - R.Left - iMargin Then
+    strStatus := Format(strSmallerStatus, [strU, strR, Int(FPercentage)]);
+  If StatusBar.Canvas.TextWidth(strStatus) > R.Right - R.Left - iMargin Then
+    strStatus := Format(strMinimumStatus, [strU, Int(FPercentage)]);
+  T.Left := R.Left + ((R.Right - R.Left) - StatusBar.Canvas.TextWidth(strStatus)) Div 2;
+  T.Right := T.Left + StatusBar.Canvas.TextWidth(strStatus);
+  T.Top := R.Top;
+  T.Bottom := R.Bottom;
+  DrawText(StatusBar.Canvas.Handle, PChar(strStatus), Length(strStatus), T, DT_SINGLELINE Or DT_VCENTER);
+  StatusBar.Canvas.Brush.Color := iLightGreen;
+  R.Right := R.Left + Trunc((R.Right - R.Left) * FPercentage / dblPercentageMulitplier);
+  StatusBar.Canvas.FillRect(R);
+  // Render % of memory text.
+  T.Right := R.Right;
+  StatusBar.Canvas.Font.Color := clBlack;
+  If T.Right >= T.Left Then
+    DrawText(StatusBar.Canvas.Handle, PChar(strStatus), Length(strStatus), T, DT_SINGLELINE Or
+        DT_VCENTER);
+End;
+
+(**
+
   This method displays a message.
 
   @precon  None.
@@ -1032,6 +1145,46 @@ Procedure TfrmGEMainForm.SearchMessage(Const strMsg: String);
 
 Begin
   TaskMessageDlg(Application.Title, strMsg, mtInformation, [mbOK], 0);
+End;
+
+(**
+
+  This is an on timer event handler for the memeory timer.
+
+  @precon  None.
+  @postcon Updates the memory statusbar panel.
+
+  @param   Sender as a TObject
+
+**)
+Procedure TfrmGEMainForm.tmMemoryTimer(Sender: TObject);
+
+Const
+  dblPercentageMultiplier = 100.0;
+
+Var
+  MMS : TMemoryManagerState;
+  i   : Integer;
+  SBTS: TSmallBlockTypeState;
+
+Begin
+  GetMemoryManagerState(MMS);
+  FUsed := MMS.TotalAllocatedLargeBlockSize + MMS.TotalAllocatedMediumBlockSize;
+  FMemoryBlock[dmtLarge]  := MMS.AllocatedLargeBlockCount;
+  FMemoryBlock[dmtMedium] := MMS.AllocatedMediumBlockCount;
+  FMemoryBlock[dmtSmall]  := 0;
+  FReserved := MMS.ReservedLargeBlockAddressSpace + MMS.ReservedMediumBlockAddressSpace;
+  For i := Low(MMS.SmallBlockTypeStates) To High(MMS.SmallBlockTypeStates) Do
+    Begin
+      SBTS := MMS.SmallBlockTypeStates[i];
+      Inc(FMemoryBlock[dmtSmall], SBTS.AllocatedBlockCount);
+      Inc(FUsed, SBTS.UseableBlockSize * SBTS.AllocatedBlockCount);
+      Inc(FReserved, SBTS.ReservedAddressSpace);
+    End;
+  FPercentage := 0.0;
+  If FReserved > 0.0 Then
+    FPercentage := Int(FUsed) / Int(FReserved) * dblPercentageMultiplier;
+  sbrStatusbar.Panels[scMemoryUseage.ColumnIndex].Text := Format('%1.1n%%', [FPercentage]);
 End;
 
 (**

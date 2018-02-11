@@ -74,10 +74,12 @@ object frmGEMainForm: TfrmGEMainForm
         Width = 150
       end
       item
+        Style = psOwnerDraw
         Width = 50
       end>
     ParentFont = True
     UseSystemFont = False
+    OnDrawPanel = sbrStatusbarDrawPanel
   end
   object sehBNF: TSynBNFSyn
     Options.AutoDetectEnabled = False
@@ -374,7 +376,7 @@ object frmGEMainForm: TfrmGEMainForm
     Left = 80
     Top = 104
     Bitmap = {
-      494C010110001800BC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110001800C00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1122,5 +1124,11 @@ object frmGEMainForm: TfrmGEMainForm
   object seSearch: TSynEditSearch
     Left = 432
     Top = 48
+  end
+  object tmMemory: TTimer
+    Interval = 250
+    OnTimer = tmMemoryTimer
+    Left = 432
+    Top = 160
   end
 end
