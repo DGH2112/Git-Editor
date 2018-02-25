@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    11 Feb 2018
+  @Date    25 Feb 2018
   
 **)
 Unit GitEditor.MainForm;
@@ -1029,7 +1029,13 @@ Begin
   dlgSave.FileTypeIndex := 1;
   Result := dlgSave.Execute(Handle);
   If Result Then
-    FFileName := dlgSave.FileName;
+    Begin
+      FFileName := dlgSave.FileName;
+      FEditor.Lines.SaveToFile(FFileName);
+      SaveToINIFile(FIniFile, FEditor);
+      FEditor.Modified := False;
+      FEditor.MarkModifiedLinesAsSaved();
+    End;
 End;
 
 (**
