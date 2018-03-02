@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    25 Feb 2018
+  @Date    02 Mar 2018
   
 **)
 Unit GitEditor.MainForm;
@@ -49,7 +49,10 @@ Uses
   SynEditMiscClasses,
   SynEditRegexSearch, 
   SynEditSearchReplaceForm,
-  SynEditSearch, Vcl.ExtCtrls;
+  SynEditSearch, Vcl.ExtCtrls, SynHighlighterXML, SynHighlighterVB, SynHighlighterSml, SynHighlighterSQL,
+  SynHighlighterRC, SynHighlighterPython, SynHighlighterPHP, SynHighlighterPerl, SynHighlighterDWS,
+  SynHighlighterVBScript, SynHighlighterJScript, SynHighlighterJava, SynHighlighterInno,
+  SynHighlighterCSS;
 
 Type
   (** A class to represent the main form of the aplpication - a single window editor. **)
@@ -100,6 +103,18 @@ Type
     seSearch: TSynEditSearch;
     actEditFindNext: TAction;
     tmMemory: TTimer;
+    sehCss: TSynCssSyn;
+    sehInno: TSynInnoSyn;
+    sehJava: TSynJavaSyn;
+    sehJScript: TSynJScriptSyn;
+    sehVBScript: TSynVBScriptSyn;
+    sehPerl: TSynPerlSyn;
+    sehPython: TSynPythonSyn;
+    sehRC: TSynRCSyn;
+    sehSQL: TSynSQLSyn;
+    sehSML: TSynSMLSyn;
+    sehVB: TSynVBSyn;
+    sehXML: TSynXMLSyn;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);

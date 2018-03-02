@@ -376,7 +376,7 @@ object frmGEMainForm: TfrmGEMainForm
     Left = 80
     Top = 104
     Bitmap = {
-      494C010110001800C40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110001800C80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1130,5 +1130,90 @@ object frmGEMainForm: TfrmGEMainForm
     OnTimer = tmMemoryTimer
     Left = 432
     Top = 160
+  end
+  object sehCss: TSynCssSyn
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Left = 536
+    Top = 40
+  end
+  object sehInno: TSynInnoSyn
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Left = 536
+    Top = 96
+  end
+  object sehJava: TSynJavaSyn
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Left = 536
+    Top = 152
+  end
+  object sehJScript: TSynJScriptSyn
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Left = 224
+    Top = 264
+  end
+  object sehVBScript: TSynVBScriptSyn
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Left = 288
+    Top = 264
+  end
+  object sehPerl: TSynPerlSyn
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Left = 400
+    Top = 264
+  end
+  object sehPython: TSynPythonSyn
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Left = 56
+    Top = 264
+  end
+  object sehRC: TSynRCSyn
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Left = 112
+    Top = 264
+  end
+  object sehSQL: TSynSQLSyn
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Left = 168
+    Top = 264
+  end
+  object sehSML: TSynSMLSyn
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Left = 496
+    Top = 264
+  end
+  object sehVB: TSynVBSyn
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Left = 544
+    Top = 264
+  end
+  object sehXML: TSynXMLSyn
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    WantBracesParsed = False
+    Left = 592
+    Top = 264
   end
 end
