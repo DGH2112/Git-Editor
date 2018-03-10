@@ -93,13 +93,13 @@ object frmGEMainForm: TfrmGEMainForm
     Options.AutoDetectEnabled = False
     Options.AutoDetectLineLimit = 0
     Options.Visible = False
-    Left = 184
-    Top = 48
+    Left = 112
+    Top = 40
   end
   object pabrContextMenu: TPopupActionBar
     Images = ilImages
-    Left = 80
-    Top = 160
+    Left = 32
+    Top = 144
     object Undo1: TMenuItem
       Action = actEditUndo
     end
@@ -234,8 +234,8 @@ object frmGEMainForm: TfrmGEMainForm
         ActionBar = atbrToolBar
       end>
     Images = ilImages
-    Left = 80
-    Top = 48
+    Left = 32
+    Top = 40
     StyleName = 'Platform Default'
     object actToolsOptions: TAction
       Category = 'Tools'
@@ -373,10 +373,10 @@ object frmGEMainForm: TfrmGEMainForm
     end
   end
   object ilImages: TImageList
-    Left = 80
-    Top = 104
+    Left = 32
+    Top = 88
     Bitmap = {
-      494C010110001800C80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110001800CC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1045,8 +1045,8 @@ object frmGEMainForm: TfrmGEMainForm
   end
   object seOptionsDialog: TSynEditOptionsDialog
     UseExtendedStrings = False
-    Left = 80
-    Top = 216
+    Left = 32
+    Top = 192
   end
   object sehIni: TSynIniSyn
     Options.AutoDetectEnabled = False
@@ -1074,22 +1074,22 @@ object frmGEMainForm: TfrmGEMainForm
     Options.AutoDetectEnabled = False
     Options.AutoDetectLineLimit = 0
     Options.Visible = False
-    Left = 184
-    Top = 216
+    Left = 112
+    Top = 192
   end
   object sehCPP: TSynCppSyn
     Options.AutoDetectEnabled = False
     Options.AutoDetectLineLimit = 0
     Options.Visible = False
-    Left = 184
-    Top = 160
+    Left = 112
+    Top = 136
   end
   object sehPascal: TSynPasSyn
     Options.AutoDetectEnabled = False
     Options.AutoDetectLineLimit = 0
     Options.Visible = False
-    Left = 184
-    Top = 104
+    Left = 112
+    Top = 88
   end
   object aeEvents: TApplicationEvents
     OnHint = aeEventsHint
@@ -1100,6 +1100,7 @@ object frmGEMainForm: TfrmGEMainForm
     Buttons = <>
     Flags = [tfUseHiconMain, tfUseHiconFooter, tfAllowDialogCancellation, tfUseCommandLinks, tfExpandFooterArea, tfExpandedByDefault]
     RadioButtons = <>
+    OnDialogConstructed = dlgTaskDialogConstructed
     Left = 352
     Top = 160
   end

@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    02 Mar 2018
+  @Date    10 Mar 2018
   
 **)
 Unit GitEditor.MainForm;
@@ -133,6 +133,7 @@ Type
     procedure actEditFindNextExecute(Sender: TObject);
     procedure tmMemoryTimer(Sender: TObject);
     procedure sbrStatusbarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel; const Rect: TRect);
+    procedure dlgTaskDialogConstructed(Sender: TObject);
   Strict Private
     Type
       (** An enumerate to define the blocks of memory. @nohints **)
@@ -173,7 +174,7 @@ Implementation
 {$R *.dfm}
 
 Uses
-  {$IFDEF CODESITE}
+  {$IFDEF DEBUG}
   CodeSiteLogging,
   {$ENDIF}
   System.StrUtils,
@@ -627,6 +628,34 @@ Begin
   FEditor.OnStatusChange := EditorStatusChange;
   FEditor.OnReplaceText := EditorReplaceText;
   EditorStatusChange(Self, [scAll]);
+End;
+
+(**
+
+  This method centres the Task dialogue on the main form after it has been constructed.
+
+  @precon  None.
+  @postcon The task dialogue is centred on the main form.
+
+  @param   Sender as a TObject
+
+**)
+Procedure TfrmGEMainForm.dlgTaskDialogConstructed(Sender: TObject);
+
+Var
+  TD : TTaskDialog;
+  R : TRect;
+  
+Begin
+  If Sender Is TTaskDialog Then
+    Begin
+      TD := Sender As TTaskDialog;
+      Win32Check(GetWindowRect(TD.Handle, R));
+      R.Left := Left + Width Div 2 - (R.Right - R.Left) Div 2;
+      R.Top := Top + Height Div 2 - (R.Bottom - R.Top) Div 2;
+      Win32Check(SetWindowPos(TD.Handle, HWND_TOP, R.Left, R.Top, R.Right - R.Left, R.Bottom - R.Top,
+        SWP_SHOWWINDOW));
+    End; 
 End;
 
 (**
