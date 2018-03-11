@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    10 Mar 2018
+  @Date    11 Mar 2018
   
 **)
 Unit GitEditor.MainForm;
@@ -1251,7 +1251,11 @@ Const
   strBugFix = ' abcedfghijklmnopqrstuvwxyz';
 
 ResourceString
+  {$IFDEF DEBUG}
+  strGitEditorBuild = 'Git Editor %d.%d%s (DEBUG Build %d.%d.%d.%d): ';
+  {$ELSE}
   strGitEditorBuild = 'Git Editor %d.%d%s (Build %d.%d.%d.%d): ';
+  {$ENDIF}
 
 Var
   BuildInfo : TGEBuildInfo;
