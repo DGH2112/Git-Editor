@@ -161,6 +161,7 @@ Type
     Procedure SearchMessage(Const strMsg : String);
     Procedure EditorReplaceText(Sender: TObject; Const ASearch, AReplace: String; Line, Column: Integer;
       Var Action: TSynReplaceAction);
+    Procedure UpdateAppTitle;
   Public
   End;
 
@@ -753,6 +754,7 @@ Var
   
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormCreate', tmoTiming);{$ENDIF}
+  UpdateAppTitle;
   SetLength(strBuffer, MAX_PATH);
   iSize := GetModuleFileName(HInstance, PChar(strBuffer), MAX_PATH);
   SetLength(strBuffer, iSize);
@@ -1210,6 +1212,42 @@ End;
 
 (**
 
+  This method updates the application title with version / build information.
+
+  @precon  None.
+  @postcon The applciation title is updated with version and build information.
+
+**)
+Procedure TfrmGEMainForm.UpdateAppTitle;
+
+Const
+  strBugFix = ' abcedfghijklmnopqrstuvwxyz';
+
+ResourceString
+  {$IFDEF DEBUG}
+  strGitEditorBuild = 'Git Editor %d.%d%s (DEBUG Build %d.%d.%d.%d)';
+  {$ELSE}
+  strGitEditorBuild = 'Git Editor %d.%d%s (Build %d.%d.%d.%d)';
+  {$ENDIF}
+
+Var
+  BuildInfo : TGEBuildInfo;
+  
+Begin
+  GetBuildInfo(BuildInfo);
+  Application.Title := Format(strGitEditorBuild, [
+      BuildInfo.FMajor,
+      BuildInfo.FMinor,
+      strBugFix[BuildInfo.FRelease + 1],
+      BuildInfo.FMajor,
+      BuildInfo.FMinor,
+      BuildInfo.FRelease,
+      BuildInfo.FBuild
+    ])
+End;
+
+(**
+
   This method updates the caption of the form.
 
   @precon  None.
@@ -1218,31 +1256,9 @@ End;
 **)
 Procedure TfrmGEMainForm.UpdateCaption;
 
-Const
-  strBugFix = ' abcedfghijklmnopqrstuvwxyz';
-
-ResourceString
-  {$IFDEF DEBUG}
-  strGitEditorBuild = 'Git Editor %d.%d%s (DEBUG Build %d.%d.%d.%d): ';
-  {$ELSE}
-  strGitEditorBuild = 'Git Editor %d.%d%s (Build %d.%d.%d.%d): ';
-  {$ENDIF}
-
-Var
-  BuildInfo : TGEBuildInfo;
-  
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'UpdateCaption', tmoTiming);{$ENDIF}
-  GetBuildInfo(BuildInfo);
-  Caption := Format(strGitEditorBuild, [
-      BuildInfo.FMajor,
-      BuildInfo.FMinor,
-      strBugFix[BuildInfo.FRelease + 1],
-      BuildInfo.FMajor,
-      BuildInfo.FMinor,
-      BuildInfo.FRelease,
-      BuildInfo.FBuild
-    ]) + ExpandFileName(FFileName);
+  Caption := Application.Title + ': ' + ExpandFileName(FFileName);
 End;
 
 End.
