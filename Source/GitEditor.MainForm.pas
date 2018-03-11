@@ -705,7 +705,7 @@ End;
 Procedure TfrmGEMainForm.FormCloseQuery(Sender: TObject; Var CanClose: Boolean);
 
 ResourceString
-  strModifiedFile = 'Modified File';
+  strInformation = 'Information';
   strFileHasBeenModified = 'The file "%s" has been modified!';
   strSaveChangesToFile = 'Save the changes to the file "%s"';
   strDiscardChangesToFile = 'Discard the changes to the file "%s"';
@@ -715,7 +715,7 @@ Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormCloseQuery', tmoTiming);{$ENDIF}
   If FEditor.Modified Then
     Begin
-      dlgTask.Title := strModifiedFile;
+      dlgTask.Title := strInformation;
       dlgTask.Caption := Application.Title;
       dlgTask.Flags := [tfAllowDialogCancellation, tfUseCommandLinks, tfPositionRelativeToWindow];
       dlgTask.MainIcon := tdiInformation;
@@ -912,7 +912,7 @@ End;
 Procedure TfrmGEMainForm.OpenFile(Const strFileName : String);
 
 ResourceString
-  strCreateTextFile = 'Create a Text File';
+  strError = 'Error';
   strFileDoesNotExist = 'The file "%s" does not exist!';
   strCreateFile = 'Create the file "%s"?';
   strDoNOTCreateFile = 'Do NOT create the file "%s"!';
@@ -932,7 +932,7 @@ Begin
     Begin
       If DirectoryExists(ExtractFilePath(FFileName)) Then
         Begin
-          dlgTask.Title := strCreateTextFile;
+          dlgTask.Title := strError;
           dlgTask.Caption := Application.Title;
           dlgTask.Flags := [tfAllowDialogCancellation, tfUseCommandLinks, tfPositionRelativeToWindow];
           dlgTask.MainIcon := tdiError;
