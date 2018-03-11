@@ -133,7 +133,6 @@ Type
     procedure actEditFindNextExecute(Sender: TObject);
     procedure tmMemoryTimer(Sender: TObject);
     procedure sbrStatusbarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel; const Rect: TRect);
-    procedure dlgTaskDialogConstructed(Sender: TObject);
   Strict Private
     Type
       (** An enumerate to define the blocks of memory. @nohints **)
@@ -632,34 +631,6 @@ End;
 
 (**
 
-  This method centres the Task dialogue on the main form after it has been constructed.
-
-  @precon  None.
-  @postcon The task dialogue is centred on the main form.
-
-  @param   Sender as a TObject
-
-**)
-Procedure TfrmGEMainForm.dlgTaskDialogConstructed(Sender: TObject);
-
-Var
-  TD : TTaskDialog;
-  R : TRect;
-  
-Begin
-  If Sender Is TTaskDialog Then
-    Begin
-      TD := Sender As TTaskDialog;
-      Win32Check(GetWindowRect(TD.Handle, R));
-      R.Left := Left + Width Div 2 - (R.Right - R.Left) Div 2;
-      R.Top := Top + Height Div 2 - (R.Bottom - R.Top) Div 2;
-      Win32Check(SetWindowPos(TD.Handle, HWND_TOP, R.Left, R.Top, R.Right - R.Left, R.Bottom - R.Top,
-        SWP_SHOWWINDOW));
-    End; 
-End;
-
-(**
-
   This method haves the prompting for the replacement of text.
 
   @precon  None.
@@ -745,8 +716,8 @@ Begin
     Begin
       dlgTask.Title := strModifiedFile;
       dlgTask.Caption := Application.Title;
-      dlgTask.Flags := [tfUseHiconMain, tfAllowDialogCancellation, tfUseCommandLinks];
-      dlgTask.MainIcon := tdiWarning;
+      dlgTask.Flags := [tfAllowDialogCancellation, tfUseCommandLinks, tfPositionRelativeToWindow];
+      dlgTask.MainIcon := tdiInformation;
       dlgTask.Text := Format(strFileHasBeenModified, [FFileName]);
       dlgTask.CommonButtons := [];
       dlgTask.Buttons.Clear;
@@ -961,8 +932,8 @@ Begin
         Begin
           dlgTask.Title := strCreateTextFile;
           dlgTask.Caption := Application.Title;
-          dlgTask.Flags := [tfUseHiconMain, tfAllowDialogCancellation, tfUseCommandLinks];
-          dlgTask.MainIcon := tdiInformation;
+          dlgTask.Flags := [tfAllowDialogCancellation, tfUseCommandLinks, tfPositionRelativeToWindow];
+          dlgTask.MainIcon := tdiError;
           dlgTask.Text := Format(strFileDoesNotExist, [FFileName]);
           dlgTask.CommonButtons := [];
           dlgTask.Buttons.Clear;
