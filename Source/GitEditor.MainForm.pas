@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    11 Mar 2018
+  @Date    22 Apr 2018
   
 **)
 Unit GitEditor.MainForm;
@@ -947,7 +947,7 @@ Begin
                 Begin
                   sl := TStringList.Create;
                   Try
-                    sl.SaveToFile(FFileName);
+                    SaveFile(FFileName);
                   Finally
                     sl.Free;
                   End;
@@ -987,7 +987,15 @@ Begin
     Begin
       If FileExists(FFileName) Then
         Begin
-          FEditor.Lines.SaveToFile(strFileName);
+          Try
+            FEditor.Lines.SaveToFile(strFileName);
+          Except
+            On E : EWriteError Do
+              Begin
+                SearchMessage(E.Message);
+                Abort;
+              End;
+          End;
           SaveToINIFile(FIniFile, FEditor);
           FEditor.Modified := False;
           FEditor.MarkModifiedLinesAsSaved();
@@ -1048,10 +1056,7 @@ Begin
   If Result Then
     Begin
       FFileName := dlgSave.FileName;
-      FEditor.Lines.SaveToFile(FFileName);
-      SaveToINIFile(FIniFile, FEditor);
-      FEditor.Modified := False;
-      FEditor.MarkModifiedLinesAsSaved();
+      SaveFile(FFileName);
     End;
 End;
 
@@ -1193,10 +1198,10 @@ Var
 Begin
   GetMemoryManagerState(MMS);
   FUsed := MMS.TotalAllocatedLargeBlockSize + MMS.TotalAllocatedMediumBlockSize;
+  FReserved := MMS.ReservedLargeBlockAddressSpace + MMS.ReservedMediumBlockAddressSpace;
   FMemoryBlock[dmtLarge]  := MMS.AllocatedLargeBlockCount;
   FMemoryBlock[dmtMedium] := MMS.AllocatedMediumBlockCount;
   FMemoryBlock[dmtSmall]  := 0;
-  FReserved := MMS.ReservedLargeBlockAddressSpace + MMS.ReservedMediumBlockAddressSpace;
   For i := Low(MMS.SmallBlockTypeStates) To High(MMS.SmallBlockTypeStates) Do
     Begin
       SBTS := MMS.SmallBlockTypeStates[i];
