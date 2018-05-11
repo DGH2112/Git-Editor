@@ -67,4 +67,4 @@ __recovery/
 
 # Exclude specific Files
 GitEditor.ficfg
-Test Text File.md
+Test Text File*.md

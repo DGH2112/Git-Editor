@@ -5,7 +5,9 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    22 Apr 2018
+  @Date    11 May 2018
+
+  @todo    Add the ability to store position and size for different monitor configurations.
   
 **)
 Unit GitEditor.MainForm;
@@ -162,6 +164,7 @@ Type
     Procedure EditorReplaceText(Sender: TObject; Const ASearch, AReplace: String; Line, Column: Integer;
       Var Action: TSynReplaceAction);
     Procedure UpdateAppTitle;
+    Function SaveFileToDisk(Const strFileName : String) : Boolean;
   Public
   End;
 
@@ -519,6 +522,7 @@ Procedure TfrmGEMainForm.actFileSaveAsExecute(Sender: TObject);
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileSaveAsExecute', tmoTiming);{$ENDIF}
   SaveFileAs(FFileName);
+  UpdateCaption;
 End;
 
 (**
@@ -986,22 +990,9 @@ Begin
   If FEditor.Modified Then
     Begin
       If FileExists(FFileName) Then
-        Begin
-          Try
-            FEditor.Lines.SaveToFile(strFileName);
-          Except
-            On E : EWriteError Do
-              Begin
-                SearchMessage(E.Message);
-                Abort;
-              End;
-          End;
-          SaveToINIFile(FIniFile, FEditor);
-          FEditor.Modified := False;
-          FEditor.MarkModifiedLinesAsSaved();
-          Result := True;
-        End Else
-          Result := SaveFileAs(strFileName);
+        Result := SaveFileToDisk(strFileName)
+      Else
+        Result := SaveFileAs(strFileName);
     End Else
       Result := True;
 End;
@@ -1056,8 +1047,39 @@ Begin
   If Result Then
     Begin
       FFileName := dlgSave.FileName;
-      SaveFile(FFileName);
+      SaveFileToDisk(FFileName);
     End;
+End;
+
+(**
+
+  This method actually saves the file to disk without any checks as it is expected that all checks will 
+  have been done before calling this method.
+
+  @precon  strFileName is a valid filename.
+  @postcon The file is saved to disk.
+
+  @param   strFileName as a String as a constant
+  @return  a Boolean
+
+**)
+Function TfrmGEMainForm.SaveFileToDisk(Const strFileName : String) : Boolean;
+
+Begin
+  Result := False;
+  Try
+    FEditor.Lines.SaveToFile(strFileName);
+    Result := True;
+  Except
+    On E : EWriteError Do
+      Begin
+        SearchMessage(E.Message);
+        Abort;
+      End;
+  End;
+  SaveToINIFile(FIniFile, FEditor);
+  FEditor.Modified := False;
+  FEditor.MarkModifiedLinesAsSaved();
 End;
 
 (**
