@@ -7,8 +7,6 @@
   @Version 1.0
   @Date    11 May 2018
 
-  @todo    Add the ability to store position and size for different monitor configurations.
-  
 **)
 Unit GitEditor.MainForm;
 
@@ -165,6 +163,7 @@ Type
       Var Action: TSynReplaceAction);
     Procedure UpdateAppTitle;
     Function SaveFileToDisk(Const strFileName : String) : Boolean;
+    Function MonitorProfile : String;
   Public
   End;
 
@@ -215,7 +214,7 @@ Type
   
 ResourceString
   (** A string constant for the Window Position INI Section **)
-  strWindowPosition = 'Window Position';
+  strWindowPosition = 'Window Position:%s';
   (** A string constant for the INI file name pattern. **)
   strINIPattern = '%s Settings for %s on %s.INI';
   (** A string constant for the profile sub-directory for storing the INI file. **)
@@ -881,6 +880,7 @@ Const
   DefaultOptions : TSearchOptions = [soPrompt, soEntireScope];
 
 Var
+  strSectionName : String;
   iniFile : TCustomIniFile;
   iOp: TSearchOption;
   
@@ -888,10 +888,11 @@ Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'LoadSettings', tmoTiming);{$ENDIF}
   iniFile := TMemIniFile.Create(FIniFile);
   Try
-    Left := iniFile.ReadInteger(strWindowPosition, strLeft, Left);
-    Top := iniFile.ReadInteger(strWindowPosition, strTop, Top);
-    Height := iniFile.ReadInteger(strWindowPosition, strHeight, Height);
-    Width := iniFile.ReadInteger(strWindowPosition, strWidth, Width);
+    strSectionName := Format(strWindowPosition, [MonitorProfile]);
+    Left := iniFile.ReadInteger(strSectionName, strLeft, Left);
+    Top := iniFile.ReadInteger(strSectionName, strTop, Top);
+    Height := iniFile.ReadInteger(strSectionName, strHeight, Height);
+    Width := iniFile.ReadInteger(strSectionName, strWidth, Width);
     FSearchOptions := [];
     For iOp := Low(TSearchOption) To High(TSearchOption) Do
       If iniFile.ReadBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
@@ -900,6 +901,38 @@ Begin
   Finally
     iniFile.Free;
   End;
+End;
+
+(**
+
+  This method returns a unique profile string for the monitor configuration so that the position and size
+  of the maion window can be monitor configuration specific.
+
+  @precon  None.
+  @postcon A unqiue string for the monitor configuration is returned.
+
+  @return  a String
+
+**)
+Function TfrmGEMainForm.MonitorProfile: String;
+
+Const
+  strMask = '%d=%dDPI(%s,%d,%d,%d,%d)';
+
+Var
+  iMonitor: Integer;
+  M : TMonitor;
+
+Begin
+  Result := '';
+  For iMonitor := 0 To Screen.MonitorCount - 1 Do
+    Begin
+      If Result <> '' Then
+        Result := Result + ':';
+      M := Screen.Monitors[iMonitor];
+      Result := Result + Format(strMask, [M.MonitorNum, M.PixelsPerInch, BoolToStr(M.Primary, True),
+        M.Left, M.Top, M.Width, M.Height]);
+    End;
 End;
 
 (**
@@ -1093,6 +1126,7 @@ End;
 Procedure TfrmGEMainForm.SaveSettings;
 
 Var
+  strSectionName : String;
   iniFile : TCustomIniFile;
   iOp : TSearchOption;
   
@@ -1100,10 +1134,11 @@ Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'SaveSettings', tmoTiming);{$ENDIF}
   iniFile := TMemIniFile.Create(FIniFile);
   Try
-    iniFile.WriteInteger(strWindowPosition, strLeft, Left);
-    iniFile.WriteInteger(strWindowPosition, strTop, Top);
-    iniFile.WriteInteger(strWindowPosition, strHeight, Height);
-    iniFile.WriteInteger(strWindowPosition, strWidth, Width);
+    strSectionName := Format(strWindowPosition, [MonitorProfile]);
+    iniFile.WriteInteger(strSectionName, strLeft, Left);
+    iniFile.WriteInteger(strSectionName, strTop, Top);
+    iniFile.WriteInteger(strSectionName, strHeight, Height);
+    iniFile.WriteInteger(strSectionName, strWidth, Width);
     For iOp := Low(TSearchOption) To High(TSearchOption) Do
       iniFile.WriteBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
         iOp In FSearchOptions);
