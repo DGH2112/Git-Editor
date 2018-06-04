@@ -5,7 +5,10 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    11 May 2018
+  @Date    04 Jun 2018
+
+  @todo    Doesn't create empty file on start-up if requested.
+  @todo    Provide a mechanism to change the active highlighter.
 
 **)
 Unit GitEditor.MainForm;
@@ -949,7 +952,7 @@ End;
 Procedure TfrmGEMainForm.OpenFile(Const strFileName : String);
 
 ResourceString
-  strError = 'Error';
+  strWarning = 'Warning';
   strFileDoesNotExist = 'The file "%s" does not exist!';
   strCreateFile = 'Create the file "%s"?';
   strDoNOTCreateFile = 'Do NOT create the file "%s"!';
@@ -969,10 +972,10 @@ Begin
     Begin
       If DirectoryExists(ExtractFilePath(FFileName)) Then
         Begin
-          dlgTask.Title := strError;
+          dlgTask.Title := strWarning;
           dlgTask.Caption := Application.Title;
           dlgTask.Flags := [tfAllowDialogCancellation, tfUseCommandLinks, tfPositionRelativeToWindow];
-          dlgTask.MainIcon := tdiError;
+          dlgTask.MainIcon := tdiWarning;
           dlgTask.Text := Format(strFileDoesNotExist, [FFileName]);
           dlgTask.CommonButtons := [];
           dlgTask.Buttons.Clear;
@@ -984,7 +987,7 @@ Begin
                 Begin
                   sl := TStringList.Create;
                   Try
-                    SaveFile(FFileName);
+                    sl.SaveToFile(FFileName);
                   Finally
                     sl.Free;
                   End;
