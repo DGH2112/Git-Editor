@@ -31,7 +31,9 @@ uses
   {$ENDIF EurekaLog}
   Vcl.Forms,
   GitEditor.MainForm in 'Source\GitEditor.MainForm.pas' {frmGEMainForm},
-  GitEditor.CommonFunctions in 'Source\GitEditor.CommonFunctions.pas';
+  GitEditor.CommonFunctions in 'Source\GitEditor.CommonFunctions.pas',
+  Vcl.Themes,
+  Vcl.Styles;
 
 {$R *.res}
 
