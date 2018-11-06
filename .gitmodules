@@ -1,3 +1,6 @@
 [submodule "DGHCustomSynEditControls"]
 	path = DGHCustomSynEditControls
 	url = D:\\Documents\\RAD Studio\\Components\\DGHCustomSynEditControls
+[submodule "SynEdit 2.1.0"]
+	path = SynEdit 2.1.0
+	url = D:\\Documents\\RAD Studio\\Library\\SynEdit 2.1.0
