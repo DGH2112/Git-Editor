@@ -2,8 +2,8 @@ object frmGEMainForm: TfrmGEMainForm
   Left = 0
   Top = 0
   Caption = 'GitEditor'
-  ClientHeight = 340
-  ClientWidth = 635
+  ClientHeight = 481
+  ClientWidth = 746
   Color = clBtnFace
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -21,7 +21,7 @@ object frmGEMainForm: TfrmGEMainForm
   object atbrToolBar: TActionToolBar
     Left = 0
     Top = 0
-    Width = 635
+    Width = 746
     Height = 26
     ActionManager = amActions
     Caption = 'atbrToolBar'
@@ -42,44 +42,87 @@ object frmGEMainForm: TfrmGEMainForm
   end
   object sbrStatusbar: TStatusBar
     Left = 0
-    Top = 321
-    Width = 635
+    Top = 462
+    Width = 746
     Height = 19
     Panels = <
       item
         Alignment = taCenter
         Bevel = pbRaised
+        Text = 'Cursor Pos'
         Width = 85
       end
       item
         Alignment = taCenter
         Bevel = pbRaised
+        Text = 'Cursor Mode'
         Width = 85
       end
       item
         Alignment = taCenter
         Bevel = pbRaised
+        Text = 'State'
         Width = 85
       end
       item
         Alignment = taCenter
+        Text = 'Lines'
         Width = 100
       end
       item
         Alignment = taCenter
+        Text = 'Size'
         Width = 125
       end
       item
         Alignment = taCenter
+        Text = 'Highlight'
+        Width = 150
+      end
+      item
+        Alignment = taCenter
+        Text = 'VCL Theme'
         Width = 150
       end
       item
         Style = psOwnerDraw
+        Text = 'Memory'
         Width = 50
       end>
     ParentFont = True
     UseSystemFont = False
+    OnMouseDown = sbrStatusbarMouseDown
     OnDrawPanel = sbrStatusbarDrawPanel
+  end
+  object Editor: TSynEdit
+    Left = 0
+    Top = 26
+    Width = 746
+    Height = 436
+    Align = alClient
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Courier New'
+    Font.Style = []
+    PopupMenu = pabrContextMenu
+    TabOrder = 2
+    Gutter.AutoSize = True
+    Gutter.Font.Charset = DEFAULT_CHARSET
+    Gutter.Font.Color = clWindowText
+    Gutter.Font.Height = -11
+    Gutter.Font.Name = 'Courier New'
+    Gutter.Font.Style = []
+    Gutter.ModificationColorModified = clRed
+    Gutter.ShowLineNumbers = True
+    Gutter.ShowModification = True
+    Lines.Strings = (
+      'Editor')
+    Options = [eoAltSetsColumnMode, eoAutoIndent, eoAutoSizeMaxScrollWidth, eoDragDropEditing, eoEnhanceHomeKey, eoEnhanceEndKey, eoGroupUndo, eoHideShowScrollbars, eoKeepCaretX, eoRightMouseMovesCursor, eoScrollHintFollows, eoScrollPastEof, eoScrollPastEol, eoShowScrollHint, eoSmartTabDelete, eoSmartTabs, eoSpecialLineDefaultFg, eoTabIndent, eoTabsToSpaces, eoTrimTrailingSpaces]
+    SearchEngine = seRegexSearch
+    OnReplaceText = EditorReplaceText
+    OnStatusChange = EditorStatusChange
+    FontSmoothing = fsmNone
   end
   object sehBNF: TSynBNFSyn
     Options.AutoDetectEnabled = False
@@ -376,7 +419,7 @@ object frmGEMainForm: TfrmGEMainForm
     Left = 32
     Top = 88
     Bitmap = {
-      494C010110001800E00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110001800080110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1215,5 +1258,21 @@ object frmGEMainForm: TfrmGEMainForm
     WantBracesParsed = False
     Left = 592
     Top = 264
+  end
+  object pmStatusbar: TPopupMenu
+    Left = 80
+    Top = 336
+  end
+  object SynGeneralSyn: TSynGeneralSyn
+    DefaultFilter = 'General Text Files (*.txt)|*.txt'
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Comments = [csAnsiStyle, csPasStyle, csCStyle, csAsmStyle, csBasStyle, csCPPStyle]
+    DetectPreprocessor = False
+    StringDelim = sdSingleAndDoubleQuote
+    StringMultiLine = False
+    Left = 400
+    Top = 320
   end
 end

@@ -1,23 +1,25 @@
 (**
   
-  This module contaisn a class which represent the main form for the application - a single window
+  This module contains a class which represent the main form for the application - a single window
   text editor.
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    11 Mar 2018
-  
+  @Date    06 Nov 2018
+
 **)
 Unit GitEditor.MainForm;
 
 Interface
 
 Uses
-  Winapi.Windows,
-  Winapi.Messages,
   System.SysUtils,
   System.Variants,
   System.Classes,
+  System.ImageList,
+  System.Actions,
+  System.IniFiles,
+  Generics.Defaults,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -26,6 +28,17 @@ Uses
   Vcl.ToolWin,
   Vcl.ActnMan,
   Vcl.ActnCtrls,
+  Vcl.ImgList,
+  Vcl.StdActns,
+  Vcl.ActnList,
+  Vcl.Menus,
+  Vcl.PlatformDefaultStyleActnCtrls,
+  Vcl.ActnPopup,
+  Vcl.AppEvnts,
+  Vcl.ExtCtrls,
+  Winapi.Windows,
+  Winapi.Messages,
+  SynEdit,
   SynHighlighterPas,
   SynHighlighterCpp,
   SynHighlighterHtml,
@@ -33,28 +46,42 @@ Uses
   SynHighlighterDfm,
   SynHighlighterIni,
   SynEditOptionsDialog,
-  System.ImageList,
-  Vcl.ImgList,
-  Vcl.StdActns,
-  System.Actions,
-  Vcl.ActnList,
-  Vcl.Menus,
-  Vcl.PlatformDefaultStyleActnCtrls,
-  Vcl.ActnPopup,
-  SynEdit,
   SynHighlighterMD,
   SynEditHighlighter,
   SynHighlighterBNF,
-  Vcl.AppEvnts,
   SynEditMiscClasses,
   SynEditRegexSearch, 
   SynEditSearchReplaceForm,
-  SynEditSearch, Vcl.ExtCtrls, SynHighlighterXML, SynHighlighterVB, SynHighlighterSml, SynHighlighterSQL,
-  SynHighlighterRC, SynHighlighterPython, SynHighlighterPHP, SynHighlighterPerl, SynHighlighterDWS,
-  SynHighlighterVBScript, SynHighlighterJScript, SynHighlighterJava, SynHighlighterInno,
-  SynHighlighterCSS;
+  SynEditSearch,
+  SynHighlighterXML,
+  SynHighlighterVB,
+  SynHighlighterSml,
+  SynHighlighterSQL,
+  SynHighlighterRC,
+  SynHighlighterPython,
+  SynHighlighterPHP,
+  SynHighlighterPerl,
+  SynHighlighterDWS,
+  SynHighlighterVBScript,
+  SynHighlighterJScript,
+  SynHighlighterJava,
+  SynHighlighterInno,
+  SynHighlighterCSS,
+  SynHighlighterGeneral;
 
 Type
+  (** An enumerate to define the statusbar columns. @nohints **)
+  TGEStatusColumn = (
+    scCaret,
+    scInsert,
+    scModified,
+    scLines,
+    scSize,
+    scFileType,
+    scVCLTheme,
+    scMemoryUseage
+  );
+
   (** A class to represent the main form of the aplpication - a single window editor. **)
   TfrmGEMainForm = Class(TForm)
     sehBNF: TSynBNFSyn;
@@ -115,6 +142,9 @@ Type
     sehSML: TSynSMLSyn;
     sehVB: TSynVBSyn;
     sehXML: TSynXMLSyn;
+    Editor: TSynEdit;
+    pmStatusbar: TPopupMenu;
+    SynGeneralSyn: TSynGeneralSyn;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -133,13 +163,31 @@ Type
     procedure actEditFindNextExecute(Sender: TObject);
     procedure tmMemoryTimer(Sender: TObject);
     procedure sbrStatusbarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel; const Rect: TRect);
+    procedure EditorStatusChange(Sender: TObject; Changes: TSynStatusChanges);
+    procedure EditorReplaceText(Sender: TObject; const ASearch, AReplace: string; Line, Column: Integer;
+      var Action: TSynReplaceAction);
+    procedure sbrStatusbarMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
+      Y: Integer);
   Strict Private
     Type
       (** An enumerate to define the blocks of memory. @nohints **)
       TMemorySize = (dmtLarge, dmtMedium, dmtSmall);
+      (** A record to describe a name index pairing for use in sorting the Highighters and VCL
+          Themings @nohints **)
+      TGENameIndexRec = Record
+        FName  : String;
+        FIndex : Integer;
+        Constructor Create(Const strName : String; Const iIndex : Integer);
+      End;
+    (** An IComparer class to allow for custom sorting of the TList<T> collection. **)
+    TGENameIndexComparer = Class(TComparer<TGENameIndexRec>)
+    Strict Private
+    Strict Protected
+    Public
+      Function Compare(Const Left, Right : TGENameIndexRec) : Integer; Override;
+    End;
   Strict Private
-    FIniFile       : String;
-    FEditor        : TSynEdit;
+    FINIFile       : TMemIniFile;
     FFileName      : String;
     FSearch        : String;
     FReplace       : String;
@@ -151,17 +199,21 @@ Type
   Strict Protected
     Procedure LoadSettings;
     Procedure SaveSettings;
-    Procedure CreateEditor;
-    Procedure EditorStatusChange(Sender : TObject; Changes : TSynStatusChanges);
+    Procedure PatchEditor;
     Procedure OpenFile(Const strFileName : String);
     Procedure UpdateCaption;
     Procedure HookHighlighter;
     Function  SaveFile(Const strFileName : String) : Boolean;
     Function  SaveFileAs(Const strFileName : String) : Boolean;
     Procedure SearchMessage(Const strMsg : String);
-    Procedure EditorReplaceText(Sender: TObject; Const ASearch, AReplace: String; Line, Column: Integer;
-      Var Action: TSynReplaceAction);
     Procedure UpdateAppTitle;
+    Function  SaveFileToDisk(Const strFileName : String) : Boolean;
+    Function  MonitorProfile : String;
+    Procedure UpdateStatusBar(Const eStatusColumn : TGEStatusColumn; Const strText : String);
+    procedure ShowVCLThemePopup(Const Pt : TPoint);
+    Procedure VCLThemeClick(Sender : TObject);
+    Procedure ShowHighlighterPopup(Const Pt : TPoint);
+    Procedure HighlighterClick(Sender : TObject);
   Public
   End;
 
@@ -178,27 +230,20 @@ Uses
   CodeSiteLogging,
   {$ENDIF}
   System.StrUtils,
-  System.IniFiles, 
   System.UITypes,
   System.TypInfo,
+  System.Types,
+  System.Generics.Collections,
+  VCL.Themes,
+  VCL.StdCtrls,
   WinAPI.SHFolder,
-  GitEditor.CommonFunctions,
   SynEditKeyCmds, 
   SynEditOptionsForm, 
   SynHighlighterUtils, 
-  SynEditTypes;
+  SynEditTypes,
+  GitEditor.CommonFunctions;
 
 Type
-  (** An enumerate to define the statusbar columns. @nohints **)
-  TGEStatusColumn = (
-    scCaret,
-    scInsert,
-    scModified,
-    scLines,
-    scSize,
-    scFileType,
-    scMemoryUseage
-  );
   (** A record helper to convert the above enumerate to column indexes. @nohints **)
   TGEStatusColumnHelper = Record Helper For TGEStatusColumn
     Function ColumnIndex : Integer;
@@ -212,11 +257,7 @@ Type
   
 ResourceString
   (** A string constant for the Window Position INI Section **)
-  strWindowPosition = 'Window Position';
-  (** A string constant for the INI file name pattern. **)
-  strINIPattern = '%s Settings for %s on %s.INI';
-  (** A string constant for the profile sub-directory for storing the INI file. **)
-  strSeasonsFall = '\Season''s Fall\';
+  strWindowPosition = 'Window Position:%s';
   (** Default filename. **)
   strUntitled = 'Untitled.txt';
   (** A filter description and file extensions for text files. **)
@@ -237,6 +278,10 @@ Const
   strDefaultExt = '*.txt';
   (** An ini section for the search options. **)
   strSearchOptionsIniSection = 'Search Options';
+  (** A constant for the INI Section name for the VCL Theme Key **)
+  strSetupINISection = 'Setup';
+  (** A constant name for the VCL Theme key in the INI file. **)
+  strVCLThemeKey = 'VCL Theme';
 
 (**
 
@@ -316,6 +361,42 @@ End;
 
 (**
 
+  A constructor for the TGENameIndexRec class.
+
+  @precon  None.
+  @postcon Initialises the record.
+
+  @param   strName as a String as a constant
+  @param   iIndex  as an Integer as a constant
+
+**)
+Constructor TfrmGEMainForm.TGENameIndexRec.Create(Const strName: String; Const iIndex: Integer);
+
+Begin
+  FName := strName;
+  FIndex := iIndex;
+End;
+
+(**
+
+  This is an overridden Ciompare method of the IComparer interface.
+
+  @precon  None.
+  @postcon This method sorts the TGENameIndexRec records by their FName field.
+
+  @param   Left  as a TGENameIndexRec as a constant
+  @param   Right as a TGENameIndexRec as a constant
+  @return  an Integer
+
+**)
+Function TfrmGEMainForm.TGENameIndexComparer.Compare(Const Left, Right: TGENameIndexRec): Integer;
+
+Begin
+  Result := CompareText(Left.FName, Right.FName);
+End;
+
+(**
+
   This is an on execute event handler for the Edit Find action.
 
   @precon  None.
@@ -328,7 +409,7 @@ Procedure TfrmGEMainForm.actEditFindExecute(Sender: TObject);
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actEditFindExecute', tmoTiming);{$ENDIF}
-  SearchFind(Self, FEditor, SearchMessage, FSearch, FReplace, FSearchOptions, seRegexSearch, seSearch,
+  SearchFind(Self, Editor, SearchMessage, FSearch, FReplace, FSearchOptions, seRegexSearch, seSearch,
     FINIFile);
 End;
 
@@ -352,9 +433,9 @@ Begin
   Try
     Exclude(FSearchOptions, soBackward);
     If FSearch <> '' Then
-      SearchFindNext(FEditor, SearchMessage, FSearch, FReplace, FSearchOptions, seRegexSearch, seSearch)
+      SearchFindNext(Editor, SearchMessage, FSearch, FReplace, FSearchOptions, seRegexSearch, seSearch)
     Else
-      SearchFind(Self, FEditor, SearchMessage, FSearch, FReplace, FSearchOptions, seRegexSearch,
+      SearchFind(Self, Editor, SearchMessage, FSearch, FReplace, FSearchOptions, seRegexSearch,
         seSearch, FINIFile);
   Finally
     FSearchOptions := SO;
@@ -375,7 +456,7 @@ Procedure TfrmGEMainForm.actEditRedoExecute(Sender: TObject);
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actEditRedoExecute', tmoTiming);{$ENDIF}
-  FEditor.Redo();
+  Editor.Redo();
 End;
 
 (**
@@ -393,7 +474,7 @@ Procedure TfrmGEMainForm.actEditRedoUpdate(Sender: TObject);
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actEditRedoUpdate', tmoTiming);{$ENDIF}
   If Sender Is TAction Then
-    (Sender As TAction).Enabled := FEditor.CanRedo;
+    (Sender As TAction).Enabled := Editor.CanRedo;
 End;
 
 (**
@@ -410,7 +491,7 @@ Procedure TfrmGEMainForm.actEditReplaceExecute(Sender: TObject);
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actEditReplaceExecute', tmoTiming);{$ENDIF}
-  SearchReplace(Self, FEditor, SearchMessage, FSearch, FReplace, FSearchOptions, seRegexSearch, seSearch,
+  SearchReplace(Self, Editor, SearchMessage, FSearch, FReplace, FSearchOptions, seRegexSearch, seSearch,
     FINIFile);
 End;
 
@@ -447,10 +528,10 @@ Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileNewExecute', tmoTiming);{$ENDIF}
   SaveFile(FFileName);
   FFileName := ExpandFileName(strUntitled);
-  FEditor.Clear;
+  Editor.Clear;
   UpdateCaption;
   HookHighlighter;
-  LoadFromINIFile(FIniFile, FEditor);
+  TDGHCustomSynEditFunctions.LoadFromINIFile(FINIFile, Editor);
 End;
 
 (**
@@ -519,6 +600,7 @@ Procedure TfrmGEMainForm.actFileSaveAsExecute(Sender: TObject);
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileSaveAsExecute', tmoTiming);{$ENDIF}
   SaveFileAs(FFileName);
+  UpdateCaption;
 End;
 
 (**
@@ -553,7 +635,7 @@ Procedure TfrmGEMainForm.actFileSaveUpdate(Sender: TObject);
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileSaveUpdate', tmoTiming);{$ENDIF}
   If Sender Is Taction Then
-    (Sender As TAction).Enabled := FEditor.Modified;
+    (Sender As TAction).Enabled := Editor.Modified;
 End;
 
 (**
@@ -570,7 +652,7 @@ Procedure TfrmGEMainForm.actToolsOptionsExecute(Sender: TObject);
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actToolsOptionsExecute', tmoTiming);{$ENDIF}
-  TfrmEditorOptions.Execute(Self, FEditor, True);
+  TfrmEditorOptions.Execute(Self, Editor, True);
 End;
 
 (**
@@ -593,45 +675,6 @@ End;
 
 (**
 
-  This method creates the synedit editor in the form - this done as visually adding this to the form
-  seems to make the IDE unstable and the form does not show correctly.
-
-  @precon  None.
-  @postcon The editor is created, inserted into the form and configured.
-
-**)
-Procedure TfrmGEMainForm.CreateEditor;
-
-Const
-  iDefaultFontheight = -11;
-
-Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'CreateEditor', tmoTiming);{$ENDIF}
-  FEditor := TSynEdit.Create(Self);
-  FEditor.Parent := Self;
-  FEditor.Align := alClient;
-  FEditor.Font.Charset := DEFAULT_CHARSET;
-  FEditor.Font.Height := iDefaultFontheight;
-  FEditor.TabOrder := 0;
-  FEditor.Gutter.Font.Assign(FEditor.Font);
-  FEditor.AddKey(ecDeleteChar, VK_DELETE, [ssCtrl], 0, []);
-  FEditor.AddKey(ecWordLeft, VK_LEFT, [ssCtrl], 0, []);
-  FEditor.AddKey(ecWordRight, VK_RIGHT, [ssCtrl], 0, []);
-  FEditor.AddKey(ecSelPageLeft, VK_LEFT, [ssAlt, ssShift], 0, []);
-  FEditor.AddKey(ecSelPageRight, VK_RIGHT, [ssAlt, ssShift], 0, []);
-  FEditor.AddKey(ecScrollLeft, VK_LEFT, [ssAlt], 0, []);
-  FEditor.AddKey(ecScrollRight, VK_RIGHT, [ssAlt], 0, []);
-  FEditor.AddKey(ecCommentBlock, Ord('C'), [ssAlt, ssCtrl], 0, []);
-  FEditor.AddKey(ecAutoCompletion, Ord('J'), [ssCtrl], 0, []);
-  FEditor.SearchEngine := seRegexSearch;
-  FEditor.PopupMenu := pabrContextMenu;
-  FEditor.OnStatusChange := EditorStatusChange;
-  FEditor.OnReplaceText := EditorReplaceText;
-  EditorStatusChange(Self, [scAll]);
-End;
-
-(**
-
   This method haves the prompting for the replacement of text.
 
   @precon  None.
@@ -649,7 +692,7 @@ Procedure TfrmGEMainForm.EditorReplaceText(Sender: TObject; Const ASearch, ARepl
   Column: Integer; Var Action: TSynReplaceAction);
 
 Begin
-  SearchReplaceText(FEditor, ASearch, AReplace, Line, Column, Action);
+  SearchReplaceText(Editor, ASearch, AReplace, Line, Column, Action);
 End;
 
 (**
@@ -663,7 +706,7 @@ End;
   @param   Changes as a TSynStatusChanges
 
 **)
-Procedure TfrmGEMainForm.EditorStatusChange(Sender : TObject; Changes : TSynStatusChanges);
+Procedure TfrmGEMainForm.EditorStatusChange(Sender: TObject; Changes: TSynStatusChanges);
 
 ResourceString
   strInsert = 'Insert';
@@ -678,14 +721,12 @@ Const
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'EditorStatusChange', tmoTiming);{$ENDIF}
-  sbrStatusbar.Panels[scCaret.ColumnIndex].Text := Format('%1.0n:%1.0n', [Int(FEditor.CaretY),
-    Int(FEditor.CaretX)]);
-  sbrStatusbar.Panels[scInsert.ColumnIndex].Text := IfThen(FEditor.InsertMode, strInsert, strOverwrite);
-  sbrStatusbar.Panels[scModified.ColumnIndex].Text := IfThen(FEditor.Modified, strModified,
-    IfThen(FEditor.ReadOnly, strReadOnly));
-  sbrStatusbar.Panels[scLines.ColumnIndex].Text := Format(strLines, [Int(FEditor.Lines.Count)]);
-  sbrStatusbar.Panels[scSize.ColumnIndex].Text := Format(strKBytes, [
-    Int(Length(FEditor.Lines.Text)) / dblKBytes]);
+  UpdateStatusBar(scCaret, Format('%1.0n:%1.0n', [Int(Editor.CaretY), Int(Editor.CaretX)]));
+  UPdateStatusBar(scInsert, IfThen(Editor.InsertMode, strInsert, strOverwrite));
+  UpdateStatusBar(scModified, IfThen(Editor.Modified, strModified,
+    IfThen(Editor.ReadOnly, strReadOnly)));
+  UpdateStatusBar(scLines, Format(strLines, [Int(Editor.Lines.Count)]));
+  UpdateStatusBar(scSize, Format(strKBytes, [Int(Length(Editor.Lines.Text)) / dblKBytes]));
 End;
 
 (**
@@ -713,7 +754,7 @@ ResourceString
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormCloseQuery', tmoTiming);{$ENDIF}
-  If FEditor.Modified Then
+  If Editor.Modified Then
     Begin
       dlgTask.Title := strInformation;
       dlgTask.Caption := Application.Title;
@@ -747,6 +788,10 @@ End;
 **)
 Procedure TfrmGEMainForm.FormCreate(Sender: TObject);
 
+ResourceString
+  strINIPattern = '%s Settings for %s on %s.INI';
+  strSeasonsFall = '\Season''s Fall\';
+  
 Var
   strBuffer : String;
   iSize : Integer;
@@ -758,22 +803,23 @@ Begin
   SetLength(strBuffer, MAX_PATH);
   iSize := GetModuleFileName(HInstance, PChar(strBuffer), MAX_PATH);
   SetLength(strBuffer, iSize);
-  FIniFile := ChangeFileExt(strBuffer, '');
-  FIniFile := Format(strINIPattern, [FIniFile, UserName, ComputerName]);
+  strFileName := ChangeFileExt(strBuffer, '');
+  strFileName := Format(strINIPattern, [strFileName, UserName, ComputerName]);
   SetLength(strBuffer, MAX_PATH);
   SHGetFolderPath(0, CSIDL_APPDATA Or CSIDL_FLAG_CREATE, 0, SHGFP_TYPE_CURRENT, PChar(strBuffer));
   strBuffer := StrPas(PChar(strBuffer));
   strBuffer := strBuffer + strSeasonsFall;
   If Not DirectoryExists(strBuffer) Then
     ForceDirectories(strBuffer);
-  FIniFile := strBuffer + ExtractFileName(FIniFile);
-  CreateEditor;
+  FINIFile := TMemIniFile.Create(strBuffer + ExtractFileName(strFileName));
+  PatchEditor;
   LoadSettings;
   If ParamCount = 0 Then
     strFileName := ExpandFileName(strUntitled)
   Else
     strFileName := ExpandFileName(ParamStr(1));
   OpenFile(strFileName);
+  TStyleManager.Engine.RegisterStyleHook(TSynEdit, TMemoStyleHook);
 End;
 
 (**
@@ -791,7 +837,35 @@ Procedure TfrmGEMainForm.FormDestroy(Sender: TObject);
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormDestroy', tmoTiming);{$ENDIF}
   SaveSettings;
-  SaveToINIFile(FIniFile, FEditor);
+  TDGHCustomSynEditFunctions.SaveToINIFile(FINIFile, Editor);
+  FINIFile.Free;
+End;
+
+(**
+
+  This method changes the highlighter to the on associated with the selected menu option (in its tag
+  property by main form component index).
+
+  @precon  None.
+  @postcon The highlighter for the editor is changed to the given editor.
+
+  @param   Sender as a TObject
+
+**)
+Procedure TfrmGEMainForm.HighlighterClick(Sender: TObject);
+
+Var
+  MI : TMenuItem;
+  
+Begin
+  If Sender Is TMenuItem Then
+    Begin
+      MI := Sender As TMenuItem;
+      TDGHCustomSynEditFunctions.SaveToIniFile(FINIFile, Editor);
+      Editor.Highlighter := Components[MI.Tag] As TSynCustomHighlighter;
+      UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(Editor.Highlighter));
+      TDGHCustomSynEditFunctions.LoadFromIniFile(FINIFile, Editor);
+    End;
 End;
 
 (**
@@ -836,8 +910,8 @@ Procedure TfrmGEMainForm.HookHighlighter;
             For i := Low(strHExt) To High(strHExt) Do
               If LowerCase(strHExt[i]) = strExt Then
                 Begin
-                  FEditor.Highlighter := H;
-                  sbrStatusbar.Panels[scFileType.ColumnIndex].Text := HighlighterName(H);
+                  Editor.Highlighter := H;
+                  UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(H));
                   Break;
                 End;
           End;
@@ -852,13 +926,13 @@ Var
   
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'HookHighlighter', tmoTiming);{$ENDIF}
-  FEditor.Highlighter := Nil;
-  sbrStatusbar.Panels[scFileType.ColumnIndex].Text := strPlainTextFiles;
+  Editor.Highlighter := Nil;
+  UpdateStatusBar(scFileType, strPlainTextFiles);
   strExt := LowerCase(ExtractFileExt(FFileName));
   If Length(strExt) = 0 Then
     Begin
-      FEditor.Highlighter := sehMD;
-      sbrStatusbar.Panels[scFileType.ColumnIndex].Text := HighlighterName(FEditor.Highlighter);
+      Editor.Highlighter := sehMD;
+      UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(Editor.Highlighter));
     End Else
       Iteratehighlighters('*' + strExt);
 End;
@@ -875,27 +949,58 @@ Procedure TfrmGEMainForm.LoadSettings;
 
 Const
   DefaultOptions : TSearchOptions = [soPrompt, soEntireScope];
+  strDefaultTheme = 'Windows';
 
 Var
-  iniFile : TCustomIniFile;
+  strSectionName : String;
   iOp: TSearchOption;
   
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'LoadSettings', tmoTiming);{$ENDIF}
-  iniFile := TMemIniFile.Create(FIniFile);
-  Try
-    Left := iniFile.ReadInteger(strWindowPosition, strLeft, Left);
-    Top := iniFile.ReadInteger(strWindowPosition, strTop, Top);
-    Height := iniFile.ReadInteger(strWindowPosition, strHeight, Height);
-    Width := iniFile.ReadInteger(strWindowPosition, strWidth, Width);
-    FSearchOptions := [];
-    For iOp := Low(TSearchOption) To High(TSearchOption) Do
-      If iniFile.ReadBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
-        iOp In DefaultOptions) Then
-        Include(FSearchOptions, iOp);
-  Finally
-    iniFile.Free;
-  End;
+  TStyleManager.TrySetStyle(FINIFile.ReadString(strSetupINISection, strVCLThemeKey, strDefaultTheme));
+  UpdateStatusBar(scVCLTheme, TStyleManager.ActiveStyle.Name);
+  strSectionName := Format(strWindowPosition, [MonitorProfile]);
+  Left := FINIFile.ReadInteger(strSectionName, strLeft, Left);
+  Top := FINIFile.ReadInteger(strSectionName, strTop, Top);
+  Height := FINIFile.ReadInteger(strSectionName, strHeight, Height);
+  Width := FINIFile.ReadInteger(strSectionName, strWidth, Width);
+  FSearchOptions := [];
+  For iOp := Low(TSearchOption) To High(TSearchOption) Do
+    If FINIFile.ReadBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
+      iOp In DefaultOptions) Then
+      Include(FSearchOptions, iOp);
+End;
+
+(**
+
+  This method returns a unique profile string for the monitor configuration so that the position and size
+  of the maion window can be monitor configuration specific.
+
+  @precon  None.
+  @postcon A unqiue string for the monitor configuration is returned.
+
+  @return  a String
+
+**)
+Function TfrmGEMainForm.MonitorProfile: String;
+
+Const
+  strMask = '%d=%dDPI(%s,%d,%d,%d,%d)';
+
+Var
+  iMonitor: Integer;
+  M : TMonitor;
+
+Begin
+  Result := '';
+  For iMonitor := 0 To Screen.MonitorCount - 1 Do
+    Begin
+      If Result <> '' Then
+        Result := Result + ':';
+      M := Screen.Monitors[iMonitor];
+      Result := Result + Format(strMask, [M.MonitorNum, M.PixelsPerInch, BoolToStr(M.Primary, True),
+        M.Left, M.Top, M.Width, M.Height]);
+    End;
 End;
 
 (**
@@ -912,7 +1017,7 @@ End;
 Procedure TfrmGEMainForm.OpenFile(Const strFileName : String);
 
 ResourceString
-  strError = 'Error';
+  strWarning = 'Warning';
   strFileDoesNotExist = 'The file "%s" does not exist!';
   strCreateFile = 'Create the file "%s"?';
   strDoNOTCreateFile = 'Do NOT create the file "%s"!';
@@ -926,16 +1031,19 @@ Begin
   FFileName := strFileName;
   If FileExists(FFileName) Then
     Begin
-      FEditor.Lines.LoadFromFile(FFileName);
-      FEditor.ReadOnly := (GetFileAttributes(PChar(FFileName)) And FILE_ATTRIBUTE_READONLY <> 0);
+      Editor.Highlighter := Nil;
+      Editor.WordWrap := False; //: @note Next 2 lines are for the performance of loading LARGE files.
+      Editor.Gutter.AutoSize := False;
+      Editor.Lines.LoadFromFile(FFileName);
+      Editor.ReadOnly := (GetFileAttributes(PChar(FFileName)) And FILE_ATTRIBUTE_READONLY <> 0);
     End Else
     Begin
       If DirectoryExists(ExtractFilePath(FFileName)) Then
         Begin
-          dlgTask.Title := strError;
+          dlgTask.Title := strWarning;
           dlgTask.Caption := Application.Title;
           dlgTask.Flags := [tfAllowDialogCancellation, tfUseCommandLinks, tfPositionRelativeToWindow];
-          dlgTask.MainIcon := tdiError;
+          dlgTask.MainIcon := tdiWarning;
           dlgTask.Text := Format(strFileDoesNotExist, [FFileName]);
           dlgTask.CommonButtons := [];
           dlgTask.Buttons.Clear;
@@ -963,8 +1071,33 @@ Begin
   EditorStatusChange(Nil, [scAll]);
   UpdateCaption;
   HookHighlighter;
-  LoadFromINIFile(FIniFile, FEditor);
-  
+  TDGHCustomSynEditFunctions.LoadFromINIFile(FINIFile, Editor);  
+End;
+
+(**
+
+  This method creates the synedit editor in the form - this done as visually adding this to the form
+  seems to make the IDE unstable and the form does not show correctly.
+
+  @precon  None.
+  @postcon The editor is created, inserted into the form and configured.
+
+**)
+Procedure TfrmGEMainForm.PatchEditor;
+
+Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'CreateEditor', tmoTiming);{$ENDIF}
+  Editor.Gutter.Font.Assign(Editor.Font);
+  Editor.AddKey(ecDeleteChar, VK_DELETE, [ssCtrl], 0, []);
+  Editor.AddKey(ecWordLeft, VK_LEFT, [ssCtrl], 0, []);
+  Editor.AddKey(ecWordRight, VK_RIGHT, [ssCtrl], 0, []);
+  Editor.AddKey(ecSelPageLeft, VK_LEFT, [ssAlt, ssShift], 0, []);
+  Editor.AddKey(ecSelPageRight, VK_RIGHT, [ssAlt, ssShift], 0, []);
+  Editor.AddKey(ecScrollLeft, VK_LEFT, [ssAlt], 0, []);
+  Editor.AddKey(ecScrollRight, VK_RIGHT, [ssAlt], 0, []);
+  Editor.AddKey(ecCommentBlock, Ord('C'), [ssAlt, ssCtrl], 0, []);
+  Editor.AddKey(ecAutoCompletion, Ord('J'), [ssCtrl], 0, []);
+  EditorStatusChange(Self, [scAll]);
 End;
 
 (**
@@ -983,17 +1116,12 @@ Function TfrmGEMainForm.SaveFile(Const strFileName : String) : Boolean;
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'SaveFile', tmoTiming);{$ENDIF}
-  If FEditor.Modified Then
+  If Editor.Modified Then
     Begin
       If FileExists(FFileName) Then
-        Begin
-          FEditor.Lines.SaveToFile(strFileName);
-          SaveToINIFile(FIniFile, FEditor);
-          FEditor.Modified := False;
-          FEditor.MarkModifiedLinesAsSaved();
-          Result := True;
-        End Else
-          Result := SaveFileAs(strFileName);
+        Result := SaveFileToDisk(strFileName)
+      Else
+        Result := SaveFileAs(strFileName);
     End Else
       Result := True;
 End;
@@ -1024,11 +1152,11 @@ Begin
   If dlgSave.DefaultExtension = '' Then
     dlgSave.DefaultExtension := strDefaultExt;
   dlgSave.FileTypes.Clear;
-  If Assigned(FEditor.Highlighter) Then
+  If Assigned(Editor.Highlighter) Then
     Begin
       FTI := dlgSave.FileTypes.Add;
-      FTI.DisplayName := GetShortHint(FEditor.Highlighter.DefaultFilter);
-      FTI.FileMask := GetLongHint(FEditor.Highlighter.DefaultFilter);
+      FTI.DisplayName := GetShortHint(Editor.Highlighter.DefaultFilter);
+      FTI.FileMask := GetLongHint(Editor.Highlighter.DefaultFilter);
     End Else
     Begin
       FTI := dlgSave.FileTypes.Add;
@@ -1048,11 +1176,39 @@ Begin
   If Result Then
     Begin
       FFileName := dlgSave.FileName;
-      FEditor.Lines.SaveToFile(FFileName);
-      SaveToINIFile(FIniFile, FEditor);
-      FEditor.Modified := False;
-      FEditor.MarkModifiedLinesAsSaved();
+      SaveFileToDisk(FFileName);
     End;
+End;
+
+(**
+
+  This method actually saves the file to disk without any checks as it is expected that all checks will 
+  have been done before calling this method.
+
+  @precon  strFileName is a valid filename.
+  @postcon The file is saved to disk.
+
+  @param   strFileName as a String as a constant
+  @return  a Boolean
+
+**)
+Function TfrmGEMainForm.SaveFileToDisk(Const strFileName : String) : Boolean;
+
+Begin
+  Result := False;
+  Try
+    Editor.Lines.SaveToFile(strFileName);
+    Result := True;
+  Except
+    On E : EWriteError Do
+      Begin
+        SearchMessage(E.Message);
+        Abort;
+      End;
+  End;
+  TDGHCustomSynEditFunctions.SaveToINIFile(FINIFile, Editor);
+  Editor.Modified := False;
+  Editor.MarkModifiedLinesAsSaved();
 End;
 
 (**
@@ -1066,24 +1222,21 @@ End;
 Procedure TfrmGEMainForm.SaveSettings;
 
 Var
-  iniFile : TCustomIniFile;
+  strSectionName : String;
   iOp : TSearchOption;
   
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'SaveSettings', tmoTiming);{$ENDIF}
-  iniFile := TMemIniFile.Create(FIniFile);
-  Try
-    iniFile.WriteInteger(strWindowPosition, strLeft, Left);
-    iniFile.WriteInteger(strWindowPosition, strTop, Top);
-    iniFile.WriteInteger(strWindowPosition, strHeight, Height);
-    iniFile.WriteInteger(strWindowPosition, strWidth, Width);
-    For iOp := Low(TSearchOption) To High(TSearchOption) Do
-      iniFile.WriteBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
-        iOp In FSearchOptions);
-    iniFile.UpdateFile;
-  Finally
-    iniFile.Free;
-  End;
+  strSectionName := Format(strWindowPosition, [MonitorProfile]);
+  FINIFile.WriteInteger(strSectionName, strLeft, Left);
+  FINIFile.WriteInteger(strSectionName, strTop, Top);
+  FINIFile.WriteInteger(strSectionName, strHeight, Height);
+  FINIFile.WriteInteger(strSectionName, strWidth, Width);
+  For iOp := Low(TSearchOption) To High(TSearchOption) Do
+    FINIFile.WriteBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
+      iOp In FSearchOptions);
+  FINIFile.WriteString(strSetupINISection, strVCLThemeKey, TStyleManager.ActiveStyle.Name);
+  FINIFile.UpdateFile;
 End;
 
 (**
@@ -1122,6 +1275,8 @@ Var
   
 Begin
   R := Rect;
+  Inc(R.Top);
+  Inc(R.Bottom);
   // Render Background
   StatusBar.Canvas.Brush.Color := iLightRed;
   StatusBar.Canvas.FillRect(R);
@@ -1142,7 +1297,7 @@ Begin
   T.Right := T.Left + StatusBar.Canvas.TextWidth(strStatus);
   T.Top := R.Top;
   T.Bottom := R.Bottom;
-  DrawText(StatusBar.Canvas.Handle, PChar(strStatus), Length(strStatus), T, DT_SINGLELINE Or DT_VCENTER);
+  DrawText(StatusBar.Canvas.Handle, PChar(strStatus), Length(strStatus), T, DT_SINGLELINE Or DT_BOTTOM);
   StatusBar.Canvas.Brush.Color := iLightGreen;
   R.Right := R.Left + Trunc((R.Right - R.Left) * FPercentage / dblPercentageMulitplier);
   StatusBar.Canvas.FillRect(R);
@@ -1151,7 +1306,50 @@ Begin
   StatusBar.Canvas.Font.Color := clBlack;
   If T.Right >= T.Left Then
     DrawText(StatusBar.Canvas.Handle, PChar(strStatus), Length(strStatus), T, DT_SINGLELINE Or
-        DT_VCENTER);
+        DT_BOTTOM);
+End;
+
+(**
+
+  This is an on mouse down event handler for the status bar.
+
+  @precon  None.
+  @postcon Displays popup menus for the VCL Themes and Highlight panels.
+
+  @param   Sender as a TObject
+  @param   Button as a TMouseButton
+  @param   Shift  as a TShiftState
+  @param   X      as an Integer
+  @param   Y      as an Integer
+
+**)
+Procedure TfrmGEMainForm.sbrStatusbarMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+
+Var
+  iPanel: Integer;
+  P : TStatusPanel;
+  iLeft : integer;
+  Pt : TPoint;
+
+Begin
+  iLeft := 0;
+  If (Shift = [ssRight]) And (mbRight = Button) Then
+    For iPanel := 0 To sbrStatusbar.Panels.Count - 1 Do
+      Begin
+        P := sbrStatusbar.Panels[iPanel];
+        Pt := Point(X, y);
+        Pt := sbrStatusbar.ClientToScreen(Pt);
+        If (X >= iLeft) And (X <= iLeft + P.Width) Then
+          Begin
+            Case TGEStatusColumn(iPanel) Of
+              scFileType: ShowHighlighterPopup(Pt);
+              scVCLTheme: ShowVCLThemePopup(Pt);
+            End;
+            Break;
+          End;
+        Inc(iLeft, P.Width);
+      End;
 End;
 
 (**
@@ -1169,6 +1367,90 @@ Procedure TfrmGEMainForm.SearchMessage(Const strMsg: String);
 Begin
   TaskMessageDlg(Application.Title, strMsg, mtInformation, [mbOK], 0);
 End;
+
+(**
+
+  This method searches the form for highlighters and adds them to a popup menu with the component index 
+  in the menu item tag property and then displays the menu at the mouse position provided.
+
+  @precon  None.
+  @postcon A popup menu is displayed with a list of the available highlighters.
+
+  @param   Pt as a TPoint as a constant
+
+**)
+Procedure TfrmGEMainForm.ShowHighlighterPopup(Const Pt : TPoint);
+
+Var
+  iComponent : Integer;
+  H : TSynCustomHighlighter;
+  MenuItem : TMenuItem;
+  Names : TList<TGENameIndexRec>;
+  
+Begin
+  pmStatusbar.Items.Clear;
+  Names := TList<TGENameIndexRec>.Create(TGENameIndexComparer.Create);
+  Try
+    For iComponent := 0 To ComponentCount - 1 Do
+      If Components[iComponent] Is TSynCustomHighlighter Then
+        Begin
+          H := Components[iComponent] As TSynCustomHighlighter;
+          Names.Add(TGENameIndexRec.Create(TDGHCustomSynEditFunctions.HighlighterName(H), iComponent));
+        End;
+    Names.Sort;
+    For iComponent := 0 To Names.Count - 1 Do
+      Begin
+        MenuItem := TMenuItem.Create(Self);
+        MenuItem.Caption := Names[iComponent].FName;
+        MenuItem.Tag := Names[iComponent].FIndex;
+        MenuItem.OnClick := HighlighterClick;
+        pmStatusbar.Items.Add(MenuItem);
+      End;
+    pmStatusbar.Popup(Pt.X, Pt.Y);
+  Finally
+    Names.Free;
+  End;
+End;
+
+(**
+
+  This method displays the VCL Themes statusbar panel popup menu.
+
+  @precon  None.
+  @postcon The VCL Themes to select from are displayed in the popup menu.
+
+  @param   Pt as a TPoint as a constant
+
+**)
+procedure TfrmGEMainForm.ShowVCLThemePopup(Const Pt : TPoint);
+
+Var
+  astrNames : TArray<String>;
+  iName: Integer;
+  MenuItem : TMenuItem;
+  Names : TList<TGENameIndexRec>;
+  
+begin
+  pmStatusbar.Items.Clear;
+  astrNames := TStyleManager.StyleNames;
+  Names := TList<TGENameIndexRec>.Create(TGENameIndexComparer.Create);
+  Try
+    For iName := Low(astrNames) To High(astrNames) Do
+      Names.Add(TGENameIndexRec.Create(astrNames[iName], iName));
+    Names.Sort;
+    For iName := 0 To Names.Count - 1 Do
+      Begin
+        MenuItem := TMenuItem.Create(Self);
+        MenuItem.Caption := Names[iName].FName;
+        MenuItem.Tag := Names[iName].FIndex;
+        MenuItem.OnClick := VCLThemeClick;
+        pmStatusbar.Items.Add(MenuItem);
+      End;
+    pmStatusbar.Popup(Pt.X, Pt.Y);
+  Finally
+    Names.Free;
+  End;
+end;
 
 (**
 
@@ -1193,10 +1475,10 @@ Var
 Begin
   GetMemoryManagerState(MMS);
   FUsed := MMS.TotalAllocatedLargeBlockSize + MMS.TotalAllocatedMediumBlockSize;
+  FReserved := MMS.ReservedLargeBlockAddressSpace + MMS.ReservedMediumBlockAddressSpace;
   FMemoryBlock[dmtLarge]  := MMS.AllocatedLargeBlockCount;
   FMemoryBlock[dmtMedium] := MMS.AllocatedMediumBlockCount;
   FMemoryBlock[dmtSmall]  := 0;
-  FReserved := MMS.ReservedLargeBlockAddressSpace + MMS.ReservedMediumBlockAddressSpace;
   For i := Low(MMS.SmallBlockTypeStates) To High(MMS.SmallBlockTypeStates) Do
     Begin
       SBTS := MMS.SmallBlockTypeStates[i];
@@ -1259,6 +1541,54 @@ Procedure TfrmGEMainForm.UpdateCaption;
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'UpdateCaption', tmoTiming);{$ENDIF}
   Caption := Application.Title + ': ' + ExpandFileName(FFileName);
+End;
+
+(**
+
+  Thisd method updates the given status bar panel with the given text ensuring the panel is width enough
+  to contain the text plus a margin.
+
+  @precon  None.
+  @postcon The given statusbar panel is updated with the given text.
+
+  @param   eStatusColumn as a TGEStatusColumn as a constant
+  @param   strText       as a String as a constant
+
+**)
+Procedure TfrmGEMainForm.UpdateStatusBar(Const eStatusColumn : TGEStatusColumn; Const strText : String);
+
+Const
+  iTextPadding = 2 * 10;
+
+Begin
+  sbrStatusbar.Canvas.Font.Assign(sbrStatusbar.Font);
+  sbrStatusbar.Panels[eStatusColumn.ColumnIndex].Width := sbrStatusbar.Canvas.TextWidth(strText) +
+    iTextPadding;
+  sbrStatusbar.Panels[eStatusColumn.ColumnIndex].Text := strText;
+End;
+
+(**
+
+  This is an on click event handler for the status bar VCL themes panel.
+
+  @precon  None.
+  @postcon Changes the VCL Theme to the one indexed in the popup menus tag property.
+
+  @param   Sender as a TObject
+
+**)
+Procedure TfrmGEMainForm.VCLThemeClick(Sender: TObject);
+
+Var
+  MI : TMenuItem;
+  
+Begin
+  If Sender Is TMenuItem Then
+    Begin
+      MI := Sender As TMenuItem;
+      TStyleManager.TrySetStyle(TStyleManager.StyleNames[MI.Tag]);
+      UpdateStatusBar(scVCLTheme, TStyleManager.ActiveStyle.Name);
+    End;
 End;
 
 End.
