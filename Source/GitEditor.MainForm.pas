@@ -1,14 +1,11 @@
 (**
   
-  This module contaisn a class which represent the main form for the application - a single window
+  This module contains a class which represent the main form for the application - a single window
   text editor.
 
   @Author  David Hoyle
   @Version 1.0
   @Date    06 Nov 2018
-
-  @todo    Sort Highlighter popup menu.
-  @todo    Sort VCL Theme popup menu.
 
 **)
 Unit GitEditor.MainForm;
@@ -22,6 +19,7 @@ Uses
   System.ImageList,
   System.Actions,
   System.IniFiles,
+  Generics.Defaults,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -68,7 +66,8 @@ Uses
   SynHighlighterJScript,
   SynHighlighterJava,
   SynHighlighterInno,
-  SynHighlighterCSS, SynHighlighterGeneral;
+  SynHighlighterCSS,
+  SynHighlighterGeneral;
 
 Type
   (** An enumerate to define the statusbar columns. @nohints **)
@@ -173,6 +172,20 @@ Type
     Type
       (** An enumerate to define the blocks of memory. @nohints **)
       TMemorySize = (dmtLarge, dmtMedium, dmtSmall);
+      (** A record to describe a name index pairing for use in sorting the Highighters and VCL
+          Themings @nohints **)
+      TGENameIndexRec = Record
+        FName  : String;
+        FIndex : Integer;
+        Constructor Create(Const strName : String; Const iIndex : Integer);
+      End;
+    (** An IComparer class to allow for custom sorting of the TList<T> collection. **)
+    TGENameIndexComparer = Class(TComparer<TGENameIndexRec>)
+    Strict Private
+    Strict Protected
+    Public
+      Function Compare(Const Left, Right : TGENameIndexRec) : Integer; Override;
+    End;
   Strict Private
     FINIFile       : TMemIniFile;
     FFileName      : String;
@@ -344,6 +357,42 @@ Begin
   B.Caption := strCaption;
   B.ModalResult := iModalResult;
   B.Default := boolDefault;
+End;
+
+(**
+
+  A constructor for the TGENameIndexRec class.
+
+  @precon  None.
+  @postcon Initialises the record.
+
+  @param   strName as a String as a constant
+  @param   iIndex  as an Integer as a constant
+
+**)
+Constructor TfrmGEMainForm.TGENameIndexRec.Create(Const strName: String; Const iIndex: Integer);
+
+Begin
+  FName := strName;
+  FIndex := iIndex;
+End;
+
+(**
+
+  This is an overridden Ciompare method of the IComparer interface.
+
+  @precon  None.
+  @postcon This method sorts the TGENameIndexRec records by their FName field.
+
+  @param   Left  as a TGENameIndexRec as a constant
+  @param   Right as a TGENameIndexRec as a constant
+  @return  an Integer
+
+**)
+Function TfrmGEMainForm.TGENameIndexComparer.Compare(Const Left, Right: TGENameIndexRec): Integer;
+
+Begin
+  Result := CompareText(Left.FName, Right.FName);
 End;
 
 (**
@@ -812,8 +861,10 @@ Begin
   If Sender Is TMenuItem Then
     Begin
       MI := Sender As TMenuItem;
+      TDGHCustomSynEditFunctions.SaveToIniFile(FINIFile, Editor);
       Editor.Highlighter := Components[MI.Tag] As TSynCustomHighlighter;
       UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(Editor.Highlighter));
+      TDGHCustomSynEditFunctions.LoadFromIniFile(FINIFile, Editor);
     End;
 End;
 
@@ -1334,20 +1385,31 @@ Var
   iComponent : Integer;
   H : TSynCustomHighlighter;
   MenuItem : TMenuItem;
+  Names : TList<TGENameIndexRec>;
   
 Begin
   pmStatusbar.Items.Clear;
-  For iComponent := 0 To ComponentCount - 1 Do
-    If Components[iComponent] Is TSynCustomHighlighter Then
+  Names := TList<TGENameIndexRec>.Create(TGENameIndexComparer.Create);
+  Try
+    For iComponent := 0 To ComponentCount - 1 Do
+      If Components[iComponent] Is TSynCustomHighlighter Then
+        Begin
+          H := Components[iComponent] As TSynCustomHighlighter;
+          Names.Add(TGENameIndexRec.Create(TDGHCustomSynEditFunctions.HighlighterName(H), iComponent));
+        End;
+    Names.Sort;
+    For iComponent := 0 To Names.Count - 1 Do
       Begin
-        H := Components[iComponent] As TSynCustomHighlighter;
         MenuItem := TMenuItem.Create(Self);
-        MenuItem.Caption := TDGHCustomSynEditFunctions.HighlighterName(H);
-        MenuItem.Tag := iComponent;
+        MenuItem.Caption := Names[iComponent].FName;
+        MenuItem.Tag := Names[iComponent].FIndex;
         MenuItem.OnClick := HighlighterClick;
         pmStatusbar.Items.Add(MenuItem);
       End;
-  pmStatusbar.Popup(Pt.X, Pt.Y);
+    pmStatusbar.Popup(Pt.X, Pt.Y);
+  Finally
+    Names.Free;
+  End;
 End;
 
 (**
@@ -1366,20 +1428,28 @@ Var
   astrNames : TArray<String>;
   iName: Integer;
   MenuItem : TMenuItem;
+  Names : TList<TGENameIndexRec>;
   
 begin
   pmStatusbar.Items.Clear;
   astrNames := TStyleManager.StyleNames;
-  //: @bug TArray.Sort<String>(astrNames);
-  For iName := Low(astrNames) To High(astrNames) Do
-    Begin
-      MenuItem := TMenuItem.Create(Self);
-      MenuItem.Caption := astrNames[iName];
-      MenuItem.Tag := iName;
-      MenuItem.OnClick := VCLThemeClick;
-      pmStatusbar.Items.Add(MenuItem);
-    End;
-  pmStatusbar.Popup(Pt.X, Pt.Y);
+  Names := TList<TGENameIndexRec>.Create(TGENameIndexComparer.Create);
+  Try
+    For iName := Low(astrNames) To High(astrNames) Do
+      Names.Add(TGENameIndexRec.Create(astrNames[iName], iName));
+    Names.Sort;
+    For iName := 0 To Names.Count - 1 Do
+      Begin
+        MenuItem := TMenuItem.Create(Self);
+        MenuItem.Caption := Names[iName].FName;
+        MenuItem.Tag := Names[iName].FIndex;
+        MenuItem.OnClick := VCLThemeClick;
+        pmStatusbar.Items.Add(MenuItem);
+      End;
+    pmStatusbar.Popup(Pt.X, Pt.Y);
+  Finally
+    Names.Free;
+  End;
 end;
 
 (**
