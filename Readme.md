@@ -1,4 +1,4 @@
-Expert and Package Manager for Mutiple RAD Studio IDEs
+Git Editor
 ======================================================
 
 Author:   David Hoyle
@@ -7,7 +7,7 @@ Version:  0.9
 
 Date:     06 Nov 2018
 
-#Web Page: [http://www.davidghoyle.co.uk/WordPress/?page_id=1361](http://www.davidghoyle.co.uk/WordPress/?page_id=1361)
+# Web Page: [http://www.davidghoyle.co.uk/WordPress/?page_id=1361](http://www.davidghoyle.co.uk/WordPress/?page_id=1361)
 
 ## Overview
 
