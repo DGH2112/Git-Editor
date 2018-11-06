@@ -2,7 +2,7 @@ object frmGEMainForm: TfrmGEMainForm
   Left = 0
   Top = 0
   Caption = 'GitEditor'
-  ClientHeight = 444
+  ClientHeight = 481
   ClientWidth = 746
   Color = clBtnFace
   DoubleBuffered = True
@@ -42,7 +42,7 @@ object frmGEMainForm: TfrmGEMainForm
   end
   object sbrStatusbar: TStatusBar
     Left = 0
-    Top = 425
+    Top = 462
     Width = 746
     Height = 19
     Panels = <
@@ -98,7 +98,7 @@ object frmGEMainForm: TfrmGEMainForm
     Left = 0
     Top = 26
     Width = 746
-    Height = 399
+    Height = 436
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -419,7 +419,7 @@ object frmGEMainForm: TfrmGEMainForm
     Left = 32
     Top = 88
     Bitmap = {
-      494C010110001800FC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110001800080110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1262,5 +1262,17 @@ object frmGEMainForm: TfrmGEMainForm
   object pmStatusbar: TPopupMenu
     Left = 80
     Top = 336
+  end
+  object SynGeneralSyn: TSynGeneralSyn
+    DefaultFilter = 'General Text Files (*.txt)|*.txt'
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Comments = [csAnsiStyle, csPasStyle, csCStyle, csAsmStyle, csBasStyle, csCPPStyle]
+    DetectPreprocessor = False
+    StringDelim = sdSingleAndDoubleQuote
+    StringMultiLine = False
+    Left = 400
+    Top = 320
   end
 end

@@ -5,9 +5,10 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    05 Nov 2018
+  @Date    06 Nov 2018
 
-  @todo    Provide a mechanism to change the active highlighter.
+  @todo    Sort Highlighter popup menu.
+  @todo    Sort VCL Theme popup menu.
 
 **)
 Unit GitEditor.MainForm;
@@ -39,6 +40,7 @@ Uses
   Vcl.ExtCtrls,
   Winapi.Windows,
   Winapi.Messages,
+  SynEdit,
   SynHighlighterPas,
   SynHighlighterCpp,
   SynHighlighterHtml,
@@ -46,7 +48,6 @@ Uses
   SynHighlighterDfm,
   SynHighlighterIni,
   SynEditOptionsDialog,
-  SynEdit,
   SynHighlighterMD,
   SynEditHighlighter,
   SynHighlighterBNF,
@@ -67,7 +68,7 @@ Uses
   SynHighlighterJScript,
   SynHighlighterJava,
   SynHighlighterInno,
-  SynHighlighterCSS;
+  SynHighlighterCSS, SynHighlighterGeneral;
 
 Type
   (** An enumerate to define the statusbar columns. @nohints **)
@@ -144,6 +145,7 @@ Type
     sehXML: TSynXMLSyn;
     Editor: TSynEdit;
     pmStatusbar: TPopupMenu;
+    SynGeneralSyn: TSynGeneralSyn;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -263,7 +265,9 @@ Const
   strDefaultExt = '*.txt';
   (** An ini section for the search options. **)
   strSearchOptionsIniSection = 'Search Options';
+  (** A constant for the INI Section name for the VCL Theme Key **)
   strSetupINISection = 'Setup';
+  (** A constant name for the VCL Theme key in the INI file. **)
   strVCLThemeKey = 'VCL Theme';
 
 (**
@@ -788,6 +792,17 @@ Begin
   FINIFile.Free;
 End;
 
+(**
+
+  This method changes the highlighter to the on associated with the selected menu option (in its tag
+  property by main form component index).
+
+  @precon  None.
+  @postcon The highlighter for the editor is changed to the given editor.
+
+  @param   Sender as a TObject
+
+**)
 Procedure TfrmGEMainForm.HighlighterClick(Sender: TObject);
 
 Var
@@ -1302,6 +1317,17 @@ Begin
   TaskMessageDlg(Application.Title, strMsg, mtInformation, [mbOK], 0);
 End;
 
+(**
+
+  This method searches the form for highlighters and adds them to a popup menu with the component index 
+  in the menu item tag property and then displays the menu at the mouse position provided.
+
+  @precon  None.
+  @postcon A popup menu is displayed with a list of the available highlighters.
+
+  @param   Pt as a TPoint as a constant
+
+**)
 Procedure TfrmGEMainForm.ShowHighlighterPopup(Const Pt : TPoint);
 
 Var
