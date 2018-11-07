@@ -909,15 +909,11 @@ Procedure TfrmGEMainForm.HookHighlighter;
               If LowerCase(strHExt[i]) = strExt Then
                 Begin
                   Editor.Highlighter := H;
-                  UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(H));
                   Break;
                 End;
           End;
       End;
   End;
-
-ResourceString
-  strPlainTextFiles = 'Plain Text Files';
 
 Var
   strExt : String;
@@ -925,14 +921,14 @@ Var
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'HookHighlighter', tmoTiming);{$ENDIF}
   Editor.Highlighter := Nil;
-  UpdateStatusBar(scFileType, strPlainTextFiles);
   strExt := LowerCase(ExtractFileExt(FFileName));
   If Length(strExt) = 0 Then
-    Begin
-      Editor.Highlighter := sehMD;
-      UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(Editor.Highlighter));
-    End Else
-      Iteratehighlighters('*' + strExt);
+    Editor.Highlighter := sehMD
+  Else
+    Iteratehighlighters('*' + strExt);
+  If Not Assigned(Editor.Highlighter) Then
+    Editor.Highlighter := SynGeneralSyn;
+  UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(Editor.Highlighter));
 End;
 
 (**
