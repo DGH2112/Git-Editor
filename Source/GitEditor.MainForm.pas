@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    06 Nov 2018
+  @Date    07 Nov 2018
 
 **)
 Unit GitEditor.MainForm;
@@ -819,7 +819,6 @@ Begin
   Else
     strFileName := ExpandFileName(ParamStr(1));
   OpenFile(strFileName);
-  TStyleManager.Engine.RegisterStyleHook(TSynEdit, TMemoStyleHook);
 End;
 
 (**
