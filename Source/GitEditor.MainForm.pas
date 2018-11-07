@@ -196,6 +196,7 @@ Type
     FReserved      : NativeUInt;
     FMemoryBlock   : Array[Low(TMemorySize)..High(TMemorySize)] Of Cardinal;
     FPercentage    : Double;
+    FFileTypeIndex : Integer;
   Strict Protected
     Procedure LoadSettings;
     Procedure SaveSettings;
@@ -573,13 +574,18 @@ Begin
       FTI := dlgOpen.FileTypes.Add;
       FTI.DisplayName := strAllFiles;
       FTI.FileMask := '*.*';
-      dlgOpen.FileTypeIndex := dlgOpen.FileTypes.Count -  1;
+      If FFileTypeIndex = -1 Then
+        FFileTypeIndex := dlgOpen.FileTypes.Count -  1;
+      dlgOpen.FileTypeIndex := FFileTypeIndex;
       dlgOpen.DefaultFolder := GetCurrentDir;
       dlgOpen.Title := strOpenFileTitle;
       dlgOpen.FileName := '';
       dlgOpen.OkButtonLabel := strOpenBtnLbl;
       If dlgOpen.Execute(Handle) Then
-        OpenFile(dlgOpen.FileName);
+        Begin
+          OpenFile(dlgOpen.FileName);
+          FFileTypeIndex := dlgOpen.FileTypeIndex;
+        End;
     End;
 End;
 
@@ -958,6 +964,7 @@ Begin
   Top := FINIFile.ReadInteger(strSectionName, strTop, Top);
   Height := FINIFile.ReadInteger(strSectionName, strHeight, Height);
   Width := FINIFile.ReadInteger(strSectionName, strWidth, Width);
+  FFileTypeIndex := FINIFile.ReadInteger(strSectionName, 'FileTypeIndex', -1);
   FSearchOptions := [];
   For iOp := Low(TSearchOption) To High(TSearchOption) Do
     If FINIFile.ReadBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
@@ -1227,6 +1234,7 @@ Begin
   FINIFile.WriteInteger(strSectionName, strTop, Top);
   FINIFile.WriteInteger(strSectionName, strHeight, Height);
   FINIFile.WriteInteger(strSectionName, strWidth, Width);
+  FINIFile.WriteInteger(strSectionName, 'FileTypeIndex', FFileTypeIndex);
   For iOp := Low(TSearchOption) To High(TSearchOption) Do
     FINIFile.WriteBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
       iOp In FSearchOptions);
