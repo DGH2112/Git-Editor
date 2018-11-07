@@ -45,7 +45,6 @@ Uses
   SynHighlighterBat,
   SynHighlighterDfm,
   SynHighlighterIni,
-  SynEditOptionsDialog,
   SynHighlighterMD,
   SynEditHighlighter,
   SynHighlighterBNF,
@@ -67,7 +66,7 @@ Uses
   SynHighlighterJava,
   SynHighlighterInno,
   SynHighlighterCSS,
-  SynHighlighterGeneral;
+  SynHighlighterGeneral, SynEditOptionsDialog;
 
 Type
   (** An enumerate to define the statusbar columns. @nohints **)
