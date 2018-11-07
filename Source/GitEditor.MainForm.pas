@@ -66,7 +66,8 @@ Uses
   SynHighlighterJava,
   SynHighlighterInno,
   SynHighlighterCSS,
-  SynHighlighterGeneral, SynEditOptionsDialog;
+  SynHighlighterGeneral,
+  SynEditOptionsDialog;
 
 Type
   (** An enumerate to define the statusbar columns. @nohints **)
@@ -812,7 +813,7 @@ Begin
   PatchEditor;
   LoadSettings;
   If ParamCount = 0 Then
-    strFileName := ExpandFileName(strUntitled)
+    strFileName := ExpandFileName('')
   Else
     strFileName := ExpandFileName(ParamStr(1));
   OpenFile(strFileName);
@@ -1019,7 +1020,6 @@ ResourceString
   strFileDoesNotExist = 'The file "%s" does not exist!';
   strCreateFile = 'Create the file "%s"?';
   strDoNOTCreateFile = 'Do NOT create the file "%s"!';
-  strFileNotFound = 'The file "%s" was not found (the directory does not exist)!';
 
 Var
   sl : TStringList;
@@ -1062,8 +1062,8 @@ Begin
             End;
         End Else
         Begin
-          TaskMessageDlg(Application.Title, Format(strFileNotFound, [FFileName]), mtError, [mbOK], 0);
-          FFileName := ExpandFileName(strUntitled)
+          actFileNewExecute(Nil);
+          actFileOpenExecute(Nil);
         End;
     End;
   EditorStatusChange(Nil, [scAll]);
