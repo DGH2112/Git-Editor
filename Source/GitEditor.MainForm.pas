@@ -329,7 +329,6 @@ End;
 Function TGEStatusColumnHelper.ColumnIndex: Integer;
 
 Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod('TGEStatusColumnHelper.ColumnIndex', tmoTiming);{$ENDIF}
   Result := Integer(Self);
 End;
 
@@ -352,7 +351,6 @@ Var
   B : TTaskDialogBaseButtonItem;
   
 Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'AddButton', tmoTiming);{$ENDIF}
   B := Buttons.Add;
   B.Caption := strCaption;
   B.ModalResult := iModalResult;
@@ -429,6 +427,7 @@ Var
   SO : TSearchOptions;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actEditFindNextExecute', tmoTiming);{$ENDIF}
   SO := FSearchOptions;
   Try
     Exclude(FSearchOptions, soBackward);
@@ -472,7 +471,6 @@ End;
 Procedure TfrmGEMainForm.actEditRedoUpdate(Sender: TObject);
 
 Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actEditRedoUpdate', tmoTiming);{$ENDIF}
   If Sender Is TAction Then
     (Sender As TAction).Enabled := Editor.CanRedo;
 End;
@@ -633,7 +631,6 @@ End;
 Procedure TfrmGEMainForm.actFileSaveUpdate(Sender: TObject);
 
 Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileSaveUpdate', tmoTiming);{$ENDIF}
   If Sender Is Taction Then
     (Sender As TAction).Enabled := Editor.Modified;
 End;
@@ -692,6 +689,7 @@ Procedure TfrmGEMainForm.EditorReplaceText(Sender: TObject; Const ASearch, ARepl
   Column: Integer; Var Action: TSynReplaceAction);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'EditorReplaceText', tmoTiming);{$ENDIF}
   SearchReplaceText(Editor, ASearch, AReplace, Line, Column, Action);
 End;
 
@@ -857,6 +855,7 @@ Var
   MI : TMenuItem;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'HighlighterClick', tmoTiming);{$ENDIF}
   If Sender Is TMenuItem Then
     Begin
       MI := Sender As TMenuItem;
@@ -991,6 +990,7 @@ Var
   M : TMonitor;
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'MonitorProfile', tmoTiming);{$ENDIF}
   Result := '';
   For iMonitor := 0 To Screen.MonitorCount - 1 Do
     Begin
@@ -1085,7 +1085,7 @@ End;
 Procedure TfrmGEMainForm.PatchEditor;
 
 Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'CreateEditor', tmoTiming);{$ENDIF}
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'PatchEditor', tmoTiming);{$ENDIF}
   Editor.Gutter.Font.Assign(Editor.Font);
   Editor.AddKey(ecDeleteChar, VK_DELETE, [ssCtrl], 0, []);
   Editor.AddKey(ecWordLeft, VK_LEFT, [ssCtrl], 0, []);
@@ -1194,6 +1194,7 @@ End;
 Function TfrmGEMainForm.SaveFileToDisk(Const strFileName : String) : Boolean;
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'SaveFileToDisk', tmoTiming);{$ENDIF}
   Result := False;
   Try
     Editor.Lines.SaveToFile(strFileName);
@@ -1332,6 +1333,7 @@ Var
   Pt : TPoint;
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'sbrStatusbarMouseDown', tmoTiming);{$ENDIF}
   iLeft := 0;
   If (Shift = [ssRight]) And (mbRight = Button) Then
     For iPanel := 0 To sbrStatusbar.Panels.Count - 1 Do
@@ -1364,6 +1366,7 @@ End;
 Procedure TfrmGEMainForm.SearchMessage(Const strMsg: String);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'SearchMessage', tmoTiming);{$ENDIF}
   TaskMessageDlg(Application.Title, strMsg, mtInformation, [mbOK], 0);
 End;
 
@@ -1387,6 +1390,7 @@ Var
   Names : TList<TGENameIndexRec>;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'ShowHighlighterPopup', tmoTiming);{$ENDIF}
   pmStatusbar.Items.Clear;
   Names := TList<TGENameIndexRec>.Create(TGENameIndexComparer.Create);
   Try
@@ -1430,6 +1434,7 @@ Var
   Names : TList<TGENameIndexRec>;
   
 begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'ShowVCLThemePopup', tmoTiming);{$ENDIF}
   pmStatusbar.Items.Clear;
   astrNames := TStyleManager.StyleNames;
   Names := TList<TGENameIndexRec>.Create(TGENameIndexComparer.Create);
@@ -1515,6 +1520,7 @@ Var
   BuildInfo : TGEBuildInfo;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'UpdateAppTitle', tmoTiming);{$ENDIF}
   GetBuildInfo(BuildInfo);
   Application.Title := Format(strGitEditorBuild, [
       BuildInfo.FMajor,
@@ -1538,7 +1544,6 @@ End;
 Procedure TfrmGEMainForm.UpdateCaption;
 
 Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'UpdateCaption', tmoTiming);{$ENDIF}
   Caption := Application.Title + ': ' + ExpandFileName(FFileName);
 End;
 
@@ -1560,6 +1565,7 @@ Const
   iTextPadding = 2 * 10;
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'UpdateStatusBar', tmoTiming);{$ENDIF}
   sbrStatusbar.Canvas.Font.Assign(sbrStatusbar.Font);
   sbrStatusbar.Panels[eStatusColumn.ColumnIndex].Width := sbrStatusbar.Canvas.TextWidth(strText) +
     iTextPadding;
@@ -1582,6 +1588,7 @@ Var
   MI : TMenuItem;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'VCLThemeClick', tmoTiming);{$ENDIF}
   If Sender Is TMenuItem Then
     Begin
       MI := Sender As TMenuItem;
@@ -1591,3 +1598,7 @@ Begin
 End;
 
 End.
+
+
+
+
