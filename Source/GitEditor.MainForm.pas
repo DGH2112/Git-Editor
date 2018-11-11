@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    06 Nov 2018
+  @Date    11 Nov 2018
 
 **)
 Unit GitEditor.MainForm;
@@ -45,7 +45,6 @@ Uses
   SynHighlighterBat,
   SynHighlighterDfm,
   SynHighlighterIni,
-  SynEditOptionsDialog,
   SynHighlighterMD,
   SynEditHighlighter,
   SynHighlighterBNF,
@@ -67,7 +66,8 @@ Uses
   SynHighlighterJava,
   SynHighlighterInno,
   SynHighlighterCSS,
-  SynHighlighterGeneral;
+  SynHighlighterGeneral,
+  SynEditOptionsDialog;
 
 Type
   (** An enumerate to define the statusbar columns. @nohints **)
@@ -196,6 +196,7 @@ Type
     FReserved      : NativeUInt;
     FMemoryBlock   : Array[Low(TMemorySize)..High(TMemorySize)] Of Cardinal;
     FPercentage    : Double;
+    FFileTypeIndex : Integer;
   Strict Protected
     Procedure LoadSettings;
     Procedure SaveSettings;
@@ -282,6 +283,12 @@ Const
   strSetupINISection = 'Setup';
   (** A constant name for the VCL Theme key in the INI file. **)
   strVCLThemeKey = 'VCL Theme';
+  (** A constant name for the FileTypeIndex key in the INI File. **)
+  strFileTypeIndexKey = 'FileTypeIndex';
+  (** A constant name for the WindowState key in the INI File. **)
+  strWindowStateKey = 'WindowState';
+  (** A constant name for the CurrentDir key in the INI File. **)
+  strCurrentDirKey = 'CurrentDir';
 
 (**
 
@@ -329,7 +336,6 @@ End;
 Function TGEStatusColumnHelper.ColumnIndex: Integer;
 
 Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod('TGEStatusColumnHelper.ColumnIndex', tmoTiming);{$ENDIF}
   Result := Integer(Self);
 End;
 
@@ -352,7 +358,6 @@ Var
   B : TTaskDialogBaseButtonItem;
   
 Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'AddButton', tmoTiming);{$ENDIF}
   B := Buttons.Add;
   B.Caption := strCaption;
   B.ModalResult := iModalResult;
@@ -370,7 +375,7 @@ End;
   @param   iIndex  as an Integer as a constant
 
 **)
-Constructor TfrmGEMainForm.TGENameIndexRec.Create(Const strName: String; Const iIndex: Integer);
+Constructor TfrmGEMainForm.TGENameIndexRec.Create(Const strName: String; Const iIndex: Integer); //FI:W525
 
 Begin
   FName := strName;
@@ -429,6 +434,7 @@ Var
   SO : TSearchOptions;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actEditFindNextExecute', tmoTiming);{$ENDIF}
   SO := FSearchOptions;
   Try
     Exclude(FSearchOptions, soBackward);
@@ -472,7 +478,6 @@ End;
 Procedure TfrmGEMainForm.actEditRedoUpdate(Sender: TObject);
 
 Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actEditRedoUpdate', tmoTiming);{$ENDIF}
   If Sender Is TAction Then
     (Sender As TAction).Enabled := Editor.CanRedo;
 End;
@@ -575,13 +580,19 @@ Begin
       FTI := dlgOpen.FileTypes.Add;
       FTI.DisplayName := strAllFiles;
       FTI.FileMask := '*.*';
-      dlgOpen.FileTypeIndex := dlgOpen.FileTypes.Count -  1;
+      If FFileTypeIndex = -1 Then
+        FFileTypeIndex := dlgOpen.FileTypes.Count -  1;
+      dlgOpen.FileTypeIndex := FFileTypeIndex;
       dlgOpen.DefaultFolder := GetCurrentDir;
       dlgOpen.Title := strOpenFileTitle;
       dlgOpen.FileName := '';
       dlgOpen.OkButtonLabel := strOpenBtnLbl;
       If dlgOpen.Execute(Handle) Then
-        OpenFile(dlgOpen.FileName);
+        Begin
+          OpenFile(dlgOpen.FileName);
+          FFileTypeIndex := dlgOpen.FileTypeIndex;
+          SetCurrentDir(ExtractFilePath(dlgOpen.FileName));
+        End;
     End;
 End;
 
@@ -633,7 +644,6 @@ End;
 Procedure TfrmGEMainForm.actFileSaveUpdate(Sender: TObject);
 
 Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileSaveUpdate', tmoTiming);{$ENDIF}
   If Sender Is Taction Then
     (Sender As TAction).Enabled := Editor.Modified;
 End;
@@ -692,6 +702,7 @@ Procedure TfrmGEMainForm.EditorReplaceText(Sender: TObject; Const ASearch, ARepl
   Column: Integer; Var Action: TSynReplaceAction);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'EditorReplaceText', tmoTiming);{$ENDIF}
   SearchReplaceText(Editor, ASearch, AReplace, Line, Column, Action);
 End;
 
@@ -815,11 +826,10 @@ Begin
   PatchEditor;
   LoadSettings;
   If ParamCount = 0 Then
-    strFileName := ExpandFileName(strUntitled)
+    strFileName := ExpandFileName('')
   Else
     strFileName := ExpandFileName(ParamStr(1));
   OpenFile(strFileName);
-  TStyleManager.Engine.RegisterStyleHook(TSynEdit, TMemoStyleHook);
 End;
 
 (**
@@ -858,6 +868,7 @@ Var
   MI : TMenuItem;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'HighlighterClick', tmoTiming);{$ENDIF}
   If Sender Is TMenuItem Then
     Begin
       MI := Sender As TMenuItem;
@@ -911,15 +922,11 @@ Procedure TfrmGEMainForm.HookHighlighter;
               If LowerCase(strHExt[i]) = strExt Then
                 Begin
                   Editor.Highlighter := H;
-                  UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(H));
                   Break;
                 End;
           End;
       End;
   End;
-
-ResourceString
-  strPlainTextFiles = 'Plain Text Files';
 
 Var
   strExt : String;
@@ -927,14 +934,14 @@ Var
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'HookHighlighter', tmoTiming);{$ENDIF}
   Editor.Highlighter := Nil;
-  UpdateStatusBar(scFileType, strPlainTextFiles);
   strExt := LowerCase(ExtractFileExt(FFileName));
   If Length(strExt) = 0 Then
-    Begin
-      Editor.Highlighter := sehMD;
-      UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(Editor.Highlighter));
-    End Else
-      Iteratehighlighters('*' + strExt);
+    Editor.Highlighter := sehMD
+  Else
+    Iteratehighlighters('*' + strExt);
+  If Not Assigned(Editor.Highlighter) Then
+    Editor.Highlighter := SynGeneralSyn;
+  UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(Editor.Highlighter));
 End;
 
 (**
@@ -954,21 +961,32 @@ Const
 Var
   strSectionName : String;
   iOp: TSearchOption;
+  recWndPlmt : TWindowPlacement;
   
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'LoadSettings', tmoTiming);{$ENDIF}
   TStyleManager.TrySetStyle(FINIFile.ReadString(strSetupINISection, strVCLThemeKey, strDefaultTheme));
   UpdateStatusBar(scVCLTheme, TStyleManager.ActiveStyle.Name);
   strSectionName := Format(strWindowPosition, [MonitorProfile]);
-  Left := FINIFile.ReadInteger(strSectionName, strLeft, Left);
-  Top := FINIFile.ReadInteger(strSectionName, strTop, Top);
-  Height := FINIFile.ReadInteger(strSectionName, strHeight, Height);
-  Width := FINIFile.ReadInteger(strSectionName, strWidth, Width);
+  recWndPlmt.length := SizeOf(TWindowPlacement);
+  GetWindowPlacement(Handle, @recWndPlmt);
+  recWndPlmt.rcNormalPosition.Left := FINIFile.ReadInteger(strSectionName, strLeft,
+    recWndPlmt.rcNormalPosition.Left);
+  recWndPlmt.rcNormalPosition.Top := FINIFile.ReadInteger(strSectionName, strTop,
+    recWndPlmt.rcNormalPosition.Top);
+  recWndPlmt.rcNormalPosition.Height := FINIFile.ReadInteger(strSectionName, strHeight,
+    recWndPlmt.rcNormalPosition.Height);
+  recWndPlmt.rcNormalPosition.Width := FINIFile.ReadInteger(strSectionName, strWidth,
+    recWndPlmt.rcNormalPosition.Width);
+  recWndPlmt.showCmd := FINIFile.ReadInteger(strSectionName, strWindowStateKey, recWndPlmt.showCmd);
+  SetWindowPlacement(Handle, @recWndPlmt);
+  FFileTypeIndex := FINIFile.ReadInteger(strSectionName, strFileTypeIndexKey, -1);
   FSearchOptions := [];
   For iOp := Low(TSearchOption) To High(TSearchOption) Do
     If FINIFile.ReadBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
       iOp In DefaultOptions) Then
       Include(FSearchOptions, iOp);
+  SetCurrentDir(FINIFile.ReadString(strSectionName, strCurrentDirKey, GetCurrentDir));
 End;
 
 (**
@@ -992,6 +1010,7 @@ Var
   M : TMonitor;
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'MonitorProfile', tmoTiming);{$ENDIF}
   Result := '';
   For iMonitor := 0 To Screen.MonitorCount - 1 Do
     Begin
@@ -1021,7 +1040,6 @@ ResourceString
   strFileDoesNotExist = 'The file "%s" does not exist!';
   strCreateFile = 'Create the file "%s"?';
   strDoNOTCreateFile = 'Do NOT create the file "%s"!';
-  strFileNotFound = 'The file "%s" was not found (the directory does not exist)!';
 
 Var
   sl : TStringList;
@@ -1064,8 +1082,8 @@ Begin
             End;
         End Else
         Begin
-          TaskMessageDlg(Application.Title, Format(strFileNotFound, [FFileName]), mtError, [mbOK], 0);
-          FFileName := ExpandFileName(strUntitled)
+          actFileNewExecute(Nil);
+          actFileOpenExecute(Nil);
         End;
     End;
   EditorStatusChange(Nil, [scAll]);
@@ -1086,8 +1104,7 @@ End;
 Procedure TfrmGEMainForm.PatchEditor;
 
 Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'CreateEditor', tmoTiming);{$ENDIF}
-  Editor.Gutter.Font.Assign(Editor.Font);
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'PatchEditor', tmoTiming);{$ENDIF}
   Editor.AddKey(ecDeleteChar, VK_DELETE, [ssCtrl], 0, []);
   Editor.AddKey(ecWordLeft, VK_LEFT, [ssCtrl], 0, []);
   Editor.AddKey(ecWordRight, VK_RIGHT, [ssCtrl], 0, []);
@@ -1195,6 +1212,7 @@ End;
 Function TfrmGEMainForm.SaveFileToDisk(Const strFileName : String) : Boolean;
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'SaveFileToDisk', tmoTiming);{$ENDIF}
   Result := False;
   Try
     Editor.Lines.SaveToFile(strFileName);
@@ -1224,18 +1242,24 @@ Procedure TfrmGEMainForm.SaveSettings;
 Var
   strSectionName : String;
   iOp : TSearchOption;
+  recWndPlmt : TWindowPlacement;
   
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'SaveSettings', tmoTiming);{$ENDIF}
   strSectionName := Format(strWindowPosition, [MonitorProfile]);
-  FINIFile.WriteInteger(strSectionName, strLeft, Left);
-  FINIFile.WriteInteger(strSectionName, strTop, Top);
-  FINIFile.WriteInteger(strSectionName, strHeight, Height);
-  FINIFile.WriteInteger(strSectionName, strWidth, Width);
+  recWndPlmt.Length := SizeOf(TWindowPlacement);
+  GetWindowPlacement(Handle, @recWndPlmt);
+  FINIFile.WriteInteger(strSectionName, strLeft, recWndPlmt.rcNormalPosition.Left);
+  FINIFile.WriteInteger(strSectionName, strTop, recWndPlmt.rcNormalPosition.Top);
+  FINIFile.WriteInteger(strSectionName, strHeight, recWndPlmt.rcNormalPosition.Height);
+  FINIFile.WriteInteger(strSectionName, strWidth, recWndPlmt.rcNormalPosition.Width);
+  FINIFile.WriteInteger(strSectionName, strWindowStateKey, recWndPlmt.showCmd);
+  FINIFile.WriteInteger(strSectionName, strFileTypeIndexKey, FFileTypeIndex);
   For iOp := Low(TSearchOption) To High(TSearchOption) Do
     FINIFile.WriteBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
       iOp In FSearchOptions);
   FINIFile.WriteString(strSetupINISection, strVCLThemeKey, TStyleManager.ActiveStyle.Name);
+  FINIFile.WriteString(strSectionName, strCurrentDirKey, GetCurrentDir);
   FINIFile.UpdateFile;
 End;
 
@@ -1333,6 +1357,7 @@ Var
   Pt : TPoint;
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'sbrStatusbarMouseDown', tmoTiming);{$ENDIF}
   iLeft := 0;
   If (Shift = [ssRight]) And (mbRight = Button) Then
     For iPanel := 0 To sbrStatusbar.Panels.Count - 1 Do
@@ -1365,6 +1390,7 @@ End;
 Procedure TfrmGEMainForm.SearchMessage(Const strMsg: String);
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'SearchMessage', tmoTiming);{$ENDIF}
   TaskMessageDlg(Application.Title, strMsg, mtInformation, [mbOK], 0);
 End;
 
@@ -1388,6 +1414,7 @@ Var
   Names : TList<TGENameIndexRec>;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'ShowHighlighterPopup', tmoTiming);{$ENDIF}
   pmStatusbar.Items.Clear;
   Names := TList<TGENameIndexRec>.Create(TGENameIndexComparer.Create);
   Try
@@ -1431,6 +1458,7 @@ Var
   Names : TList<TGENameIndexRec>;
   
 begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'ShowVCLThemePopup', tmoTiming);{$ENDIF}
   pmStatusbar.Items.Clear;
   astrNames := TStyleManager.StyleNames;
   Names := TList<TGENameIndexRec>.Create(TGENameIndexComparer.Create);
@@ -1516,6 +1544,7 @@ Var
   BuildInfo : TGEBuildInfo;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'UpdateAppTitle', tmoTiming);{$ENDIF}
   GetBuildInfo(BuildInfo);
   Application.Title := Format(strGitEditorBuild, [
       BuildInfo.FMajor,
@@ -1539,7 +1568,6 @@ End;
 Procedure TfrmGEMainForm.UpdateCaption;
 
 Begin
-  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'UpdateCaption', tmoTiming);{$ENDIF}
   Caption := Application.Title + ': ' + ExpandFileName(FFileName);
 End;
 
@@ -1561,6 +1589,7 @@ Const
   iTextPadding = 2 * 10;
 
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'UpdateStatusBar', tmoTiming);{$ENDIF}
   sbrStatusbar.Canvas.Font.Assign(sbrStatusbar.Font);
   sbrStatusbar.Panels[eStatusColumn.ColumnIndex].Width := sbrStatusbar.Canvas.TextWidth(strText) +
     iTextPadding;
@@ -1583,6 +1612,7 @@ Var
   MI : TMenuItem;
   
 Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'VCLThemeClick', tmoTiming);{$ENDIF}
   If Sender Is TMenuItem Then
     Begin
       MI := Sender As TMenuItem;
@@ -1592,3 +1622,7 @@ Begin
 End;
 
 End.
+
+
+
+
