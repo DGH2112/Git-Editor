@@ -1156,7 +1156,7 @@ object frmGEMainForm: TfrmGEMainForm
   object dlgOpen: TFileOpenDialog
     FavoriteLinks = <>
     FileTypes = <>
-    Options = [fdoPickFolders, fdoPathMustExist, fdoFileMustExist, fdoCreatePrompt]
+    Options = [fdoPathMustExist, fdoFileMustExist, fdoCreatePrompt]
     Left = 352
     Top = 104
   end
