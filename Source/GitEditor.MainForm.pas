@@ -285,6 +285,10 @@ Const
   strVCLThemeKey = 'VCL Theme';
   (** A constant name for the FileTypeIndex key in the INI File. **)
   strFileTypeIndexKey = 'FileTypeIndex';
+  (** A constant name for the WindowState key in the INI File. **)
+  strWindowStateKey = 'WindowState';
+  (** A constant name for the CurrentDir key in the INI File. **)
+  strCurrentDirKey = 'CurrentDir';
 
 (**
 
@@ -957,23 +961,32 @@ Const
 Var
   strSectionName : String;
   iOp: TSearchOption;
+  recWndPlmt : TWindowPlacement;
   
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'LoadSettings', tmoTiming);{$ENDIF}
   TStyleManager.TrySetStyle(FINIFile.ReadString(strSetupINISection, strVCLThemeKey, strDefaultTheme));
   UpdateStatusBar(scVCLTheme, TStyleManager.ActiveStyle.Name);
   strSectionName := Format(strWindowPosition, [MonitorProfile]);
-  Left := FINIFile.ReadInteger(strSectionName, strLeft, Left);
-  Top := FINIFile.ReadInteger(strSectionName, strTop, Top);
-  Height := FINIFile.ReadInteger(strSectionName, strHeight, Height);
-  Width := FINIFile.ReadInteger(strSectionName, strWidth, Width);
+  recWndPlmt.length := SizeOf(TWindowPlacement);
+  GetWindowPlacement(Handle, @recWndPlmt);
+  recWndPlmt.rcNormalPosition.Left := FINIFile.ReadInteger(strSectionName, strLeft,
+    recWndPlmt.rcNormalPosition.Left);
+  recWndPlmt.rcNormalPosition.Top := FINIFile.ReadInteger(strSectionName, strTop,
+    recWndPlmt.rcNormalPosition.Top);
+  recWndPlmt.rcNormalPosition.Height := FINIFile.ReadInteger(strSectionName, strHeight,
+    recWndPlmt.rcNormalPosition.Height);
+  recWndPlmt.rcNormalPosition.Width := FINIFile.ReadInteger(strSectionName, strWidth,
+    recWndPlmt.rcNormalPosition.Width);
+  recWndPlmt.showCmd := FINIFile.ReadInteger(strSectionName, strWindowStateKey, recWndPlmt.showCmd);
+  SetWindowPlacement(Handle, @recWndPlmt);
   FFileTypeIndex := FINIFile.ReadInteger(strSectionName, strFileTypeIndexKey, -1);
   FSearchOptions := [];
   For iOp := Low(TSearchOption) To High(TSearchOption) Do
     If FINIFile.ReadBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
       iOp In DefaultOptions) Then
       Include(FSearchOptions, iOp);
-  SetCurrentDir(FINIFile.ReadString(strSectionName, 'CurrentDir', GetCurrentDir));
+  SetCurrentDir(FINIFile.ReadString(strSectionName, strCurrentDirKey, GetCurrentDir));
 End;
 
 (**
@@ -1230,20 +1243,24 @@ Procedure TfrmGEMainForm.SaveSettings;
 Var
   strSectionName : String;
   iOp : TSearchOption;
+  recWndPlmt : TWindowPlacement;
   
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'SaveSettings', tmoTiming);{$ENDIF}
   strSectionName := Format(strWindowPosition, [MonitorProfile]);
-  FINIFile.WriteInteger(strSectionName, strLeft, Left);
-  FINIFile.WriteInteger(strSectionName, strTop, Top);
-  FINIFile.WriteInteger(strSectionName, strHeight, Height);
-  FINIFile.WriteInteger(strSectionName, strWidth, Width);
+  recWndPlmt.Length := SizeOf(TWindowPlacement);
+  GetWindowPlacement(Handle, @recWndPlmt);
+  FINIFile.WriteInteger(strSectionName, strLeft, recWndPlmt.rcNormalPosition.Left);
+  FINIFile.WriteInteger(strSectionName, strTop, recWndPlmt.rcNormalPosition.Top);
+  FINIFile.WriteInteger(strSectionName, strHeight, recWndPlmt.rcNormalPosition.Height);
+  FINIFile.WriteInteger(strSectionName, strWidth, recWndPlmt.rcNormalPosition.Width);
+  FINIFile.WriteInteger(strSectionName, strWindowStateKey, recWndPlmt.showCmd);
   FINIFile.WriteInteger(strSectionName, strFileTypeIndexKey, FFileTypeIndex);
   For iOp := Low(TSearchOption) To High(TSearchOption) Do
     FINIFile.WriteBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
       iOp In FSearchOptions);
   FINIFile.WriteString(strSetupINISection, strVCLThemeKey, TStyleManager.ActiveStyle.Name);
-  FINIFile.WriteString(strSectionName, 'CurrentDir', GetCurrentDir);
+  FINIFile.WriteString(strSectionName, strCurrentDirKey, GetCurrentDir);
   FINIFile.UpdateFile;
 End;
 
