@@ -110,19 +110,71 @@ object frmGEMainForm: TfrmGEMainForm
     Gutter.AutoSize = True
     Gutter.Font.Charset = DEFAULT_CHARSET
     Gutter.Font.Color = clWindowText
-    Gutter.Font.Height = -11
-    Gutter.Font.Name = 'Courier New'
+    Gutter.Font.Height = -13
+    Gutter.Font.Name = 'Tahoma'
     Gutter.Font.Style = []
     Gutter.ModificationColorModified = clRed
     Gutter.ShowLineNumbers = True
     Gutter.ShowModification = True
+    Gutter.UseFontStyle = False
     Lines.Strings = (
-      'Editor')
+      'Procedure TfrmGEMainForm.actFileOpenExecute(Sender: TObject);'
+      ''
+      'ResourceString'
+      '  strOpenFileTitle = '#39'Open Text File'#39';'
+      '  strOpenBtnLbl = '#39'Open'#39';'
+      ''
+      'Var'
+      '  iComponent: Integer;'
+      '  H : TSynCustomHighlighter;'
+      '  FTI : TFileTypeItem;'
+      ''
+      'Begin'
+      
+        '  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, '#39'actFileOpenExecut' +
+        'e'#39', tmoTiming);{$ENDIF}'
+      '  If SaveFile(FFileName) Then'
+      '    Begin'
+      '      dlgOpen.DefaultExtension := strDefaultExt;'
+      '      dlgOpen.FileTypes.Clear;'
+      '      For iComponent := 0 To ComponentCount - 1 Do'
+      '        If Components[iComponent] Is TSynCustomHighlighter Then'
+      '          Begin'
+      
+        '            H := Components[iComponent] As TSynCustomHighlighter' +
+        ';'
+      '            FTI := dlgOpen.FileTypes.Add;'
+      '            FTI.DisplayName := GetShortHint(H.DefaultFilter);'
+      '            FTI.FileMask := GetLongHint(H.DefaultFilter);'
+      '          End;'
+      '      FTI := dlgOpen.FileTypes.Add;'
+      '      FTI.DisplayName := GetShortHint(strDefaultFilter);'
+      '      FTI.FileMask := GetLongHint(strDefaultFilter);'
+      '      FTI := dlgOpen.FileTypes.Add;'
+      '      FTI.DisplayName := strAllFiles;'
+      '      FTI.FileMask := '#39'*.*'#39';'
+      '      If FFileTypeIndex = -1 Then'
+      '        FFileTypeIndex := dlgOpen.FileTypes.Count -  1;'
+      '      dlgOpen.FileTypeIndex := FFileTypeIndex;'
+      '      dlgOpen.DefaultFolder := GetCurrentDir;'
+      '      dlgOpen.Title := strOpenFileTitle;'
+      '      dlgOpen.FileName := '#39#39';'
+      '      dlgOpen.OkButtonLabel := strOpenBtnLbl;'
+      '      If dlgOpen.Execute(Handle) Then'
+      '        Begin'
+      '          OpenFile(dlgOpen.FileName);'
+      '          FFileTypeIndex := dlgOpen.FileTypeIndex;'
+      '          SetCurrentDir(ExtractFilePath(dlgOpen.FileName));'
+      '        End;'
+      '    End;'
+      'End;'
+      ''
+      '')
     Options = [eoAltSetsColumnMode, eoAutoIndent, eoAutoSizeMaxScrollWidth, eoDragDropEditing, eoEnhanceHomeKey, eoEnhanceEndKey, eoGroupUndo, eoHideShowScrollbars, eoKeepCaretX, eoRightMouseMovesCursor, eoScrollHintFollows, eoScrollPastEof, eoScrollPastEol, eoShowScrollHint, eoSmartTabDelete, eoSmartTabs, eoSpecialLineDefaultFg, eoTabIndent, eoTabsToSpaces, eoTrimTrailingSpaces]
     SearchEngine = seRegexSearch
     OnReplaceText = EditorReplaceText
     OnStatusChange = EditorStatusChange
-    FontSmoothing = fsmNone
+    FontSmoothing = fsmClearType
   end
   object sehBNF: TSynBNFSyn
     Options.AutoDetectEnabled = False
@@ -419,7 +471,7 @@ object frmGEMainForm: TfrmGEMainForm
     Left = 32
     Top = 88
     Bitmap = {
-      494C0101100018001C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110001800200110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

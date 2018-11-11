@@ -1105,7 +1105,6 @@ Procedure TfrmGEMainForm.PatchEditor;
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'PatchEditor', tmoTiming);{$ENDIF}
-  Editor.Gutter.Font.Assign(Editor.Font);
   Editor.AddKey(ecDeleteChar, VK_DELETE, [ssCtrl], 0, []);
   Editor.AddKey(ecWordLeft, VK_LEFT, [ssCtrl], 0, []);
   Editor.AddKey(ecWordRight, VK_RIGHT, [ssCtrl], 0, []);
