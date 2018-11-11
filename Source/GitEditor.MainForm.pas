@@ -375,7 +375,7 @@ End;
   @param   iIndex  as an Integer as a constant
 
 **)
-Constructor TfrmGEMainForm.TGENameIndexRec.Create(Const strName: String; Const iIndex: Integer);
+Constructor TfrmGEMainForm.TGENameIndexRec.Create(Const strName: String; Const iIndex: Integer); //FI:W525
 
 Begin
   FName := strName;

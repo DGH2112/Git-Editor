@@ -127,6 +127,8 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Source\GitEditor.CommonFunctions.pas"/>
+        <None Include="License.md"/>
+        <None Include="Readme.md"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -156,6 +158,18 @@
             </Delphi.Personality>
             <Deployment Version="3">
                 <DeployFile LocalName="GitEditorITHVerInfo.RC" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="License.md" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Readme.md" Configuration="Debug" Class="ProjectFile">
                     <Platform Name="Win32">
                         <RemoteDir>.\</RemoteDir>
                         <Overwrite>true</Overwrite>
