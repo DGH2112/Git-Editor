@@ -5,7 +5,7 @@ Author:   David Hoyle
 
 Version:  0.9.2
 
-Date:     07 Nov 2018
+Date:     11 Nov 2018
 
 Web Page: [TBC](http://www.davidghoyle.co.uk/WordPress/)
 
