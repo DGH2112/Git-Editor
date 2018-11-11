@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    07 Nov 2018
+  @Date    11 Nov 2018
 
 **)
 Unit GitEditor.MainForm;
@@ -283,6 +283,8 @@ Const
   strSetupINISection = 'Setup';
   (** A constant name for the VCL Theme key in the INI file. **)
   strVCLThemeKey = 'VCL Theme';
+  (** A constant name for the FileTypeIndex key in the INI File. **)
+  strFileTypeIndexKey = 'FileTypeIndex';
 
 (**
 
@@ -585,6 +587,7 @@ Begin
         Begin
           OpenFile(dlgOpen.FileName);
           FFileTypeIndex := dlgOpen.FileTypeIndex;
+          SetCurrentDir(ExtractFilePath(dlgOpen.FileName));
         End;
     End;
 End;
@@ -964,12 +967,13 @@ Begin
   Top := FINIFile.ReadInteger(strSectionName, strTop, Top);
   Height := FINIFile.ReadInteger(strSectionName, strHeight, Height);
   Width := FINIFile.ReadInteger(strSectionName, strWidth, Width);
-  FFileTypeIndex := FINIFile.ReadInteger(strSectionName, 'FileTypeIndex', -1);
+  FFileTypeIndex := FINIFile.ReadInteger(strSectionName, strFileTypeIndexKey, -1);
   FSearchOptions := [];
   For iOp := Low(TSearchOption) To High(TSearchOption) Do
     If FINIFile.ReadBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
       iOp In DefaultOptions) Then
       Include(FSearchOptions, iOp);
+  SetCurrentDir(FINIFile.ReadString(strSectionName, 'CurrentDir', GetCurrentDir));
 End;
 
 (**
@@ -1234,11 +1238,12 @@ Begin
   FINIFile.WriteInteger(strSectionName, strTop, Top);
   FINIFile.WriteInteger(strSectionName, strHeight, Height);
   FINIFile.WriteInteger(strSectionName, strWidth, Width);
-  FINIFile.WriteInteger(strSectionName, 'FileTypeIndex', FFileTypeIndex);
+  FINIFile.WriteInteger(strSectionName, strFileTypeIndexKey, FFileTypeIndex);
   For iOp := Low(TSearchOption) To High(TSearchOption) Do
     FINIFile.WriteBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
       iOp In FSearchOptions);
   FINIFile.WriteString(strSetupINISection, strVCLThemeKey, TStyleManager.ActiveStyle.Name);
+  FINIFile.WriteString(strSectionName, 'CurrentDir', GetCurrentDir);
   FINIFile.UpdateFile;
 End;
 
