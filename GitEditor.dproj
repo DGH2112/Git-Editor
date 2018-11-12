@@ -96,6 +96,7 @@
         <Debugger_CWD>D:\Documents\RAD Studio\Applications\Git Editor\</Debugger_CWD>
         <DCC_Define>EUREKALOG;$(DCC_Define)</DCC_Define>
         <DCC_MapFile>3</DCC_MapFile>
+        <Debugger_RunParams>&quot;Test Text File.md&quot;</Debugger_RunParams>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>

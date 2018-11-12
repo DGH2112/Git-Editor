@@ -3,9 +3,9 @@ Git Editor
 
 Author:   David Hoyle
 
-Version:  0.9.2
+Version:  0.9.3
 
-Date:     11 Nov 2018
+Date:     12 Nov 2018
 
 Web Page: [TBC](http://www.davidghoyle.co.uk/WordPress/)
 

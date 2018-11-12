@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    11 Nov 2018
+  @Date    12 Nov 2018
 
 **)
 Unit GitEditor.MainForm;
@@ -824,11 +824,11 @@ Begin
     ForceDirectories(strBuffer);
   FINIFile := TMemIniFile.Create(strBuffer + ExtractFileName(strFileName));
   PatchEditor;
-  LoadSettings;
   If ParamCount = 0 Then
     strFileName := ExpandFileName('')
   Else
     strFileName := ExpandFileName(ParamStr(1));
+  LoadSettings;
   OpenFile(strFileName);
 End;
 
@@ -1078,7 +1078,7 @@ Begin
                     sl.Free;
                   End;
                 End;
-              mrNo: FFileName := ExpandFileName(strUntitled)
+              mrNo: actFileNewExecute(Nil);
             End;
         End Else
         Begin
