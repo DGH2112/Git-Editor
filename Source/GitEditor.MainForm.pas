@@ -5,7 +5,10 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    12 Nov 2018
+  @Date    24 Nov 2018
+
+  @todo    Add SGML tag completion
+  @todo    Add Print Preview
 
 **)
 Unit GitEditor.MainForm;
