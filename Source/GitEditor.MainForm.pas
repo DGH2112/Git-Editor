@@ -5,10 +5,13 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    24 Nov 2018
+  @Date    01 Dec 2018
 
+  @todo    Add a recently used files list
+  @todo    Add file associations
   @todo    Add SGML tag completion
   @todo    Add Print Preview
+  @todo    Add WinHelp / HTML configuration
 
 **)
 Unit GitEditor.MainForm;
