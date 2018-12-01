@@ -558,11 +558,13 @@ Procedure TfrmGEMainForm.actFileOpenExecute(Sender: TObject);
 ResourceString
   strOpenFileTitle = 'Open Text File';
   strOpenBtnLbl = 'Open';
+  strAllFilters = 'All Filters';
   
 Var
   iComponent: Integer;
   H : TSynCustomHighlighter;
   FTI : TFileTypeItem;
+  strExts : String;
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileOpenExecute', tmoTiming);{$ENDIF}
@@ -574,10 +576,20 @@ Begin
         If Components[iComponent] Is TSynCustomHighlighter Then
           Begin
             H := Components[iComponent] As TSynCustomHighlighter;
-            FTI := dlgOpen.FileTypes.Add;
-            FTI.DisplayName := GetShortHint(H.DefaultFilter);
-            FTI.FileMask := GetLongHint(H.DefaultFilter);
+            CodeSite.Send(H.Name, H.DefaultFilter);
+            If H.DefaultFilter <> '' Then
+              Begin
+                FTI := dlgOpen.FileTypes.Add;
+                FTI.DisplayName := GetShortHint(H.DefaultFilter);
+                FTI.FileMask := GetLongHint(H.DefaultFilter);
+                If strExts <> '' Then
+                  strExts := strExts + ';';
+                strExts := strExts + FTI.FileMask;
+              End;
           End;
+      FTI := dlgOpen.FileTypes.Add;
+      FTI.DisplayName := strAllFilters;
+      FTI.FileMask := strExts;
       FTI := dlgOpen.FileTypes.Add;
       FTI.DisplayName := GetShortHint(strDefaultFilter);
       FTI.FileMask := GetLongHint(strDefaultFilter);
