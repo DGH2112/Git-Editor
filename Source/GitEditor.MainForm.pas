@@ -70,7 +70,7 @@ Uses
   SynHighlighterInno,
   SynHighlighterCSS,
   SynHighlighterGeneral,
-  SynEditOptionsDialog;
+  SynEditOptionsDialog, SynHighlighterMulti;
 
 Type
   (** An enumerate to define the statusbar columns. @nohints **)
@@ -148,6 +148,7 @@ Type
     Editor: TSynEdit;
     pmStatusbar: TPopupMenu;
     SynGeneralSyn: TSynGeneralSyn;
+    sehHTMLMH: TSynMultiSyn;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
