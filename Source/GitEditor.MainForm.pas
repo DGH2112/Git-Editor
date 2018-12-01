@@ -568,6 +568,7 @@ Var
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileOpenExecute', tmoTiming);{$ENDIF}
+  //: @bug Does not prompt to save, just saves the file!
   If SaveFile(FFileName) Then
     Begin
       dlgOpen.DefaultExtension := strDefaultExt;
