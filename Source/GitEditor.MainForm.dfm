@@ -418,7 +418,7 @@ object frmGEMainForm: TfrmGEMainForm
     Left = 32
     Top = 88
     Bitmap = {
-      494C010110001800240110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110001800280110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1273,5 +1273,28 @@ object frmGEMainForm: TfrmGEMainForm
     StringMultiLine = False
     Left = 400
     Top = 320
+  end
+  object sehHTMLMH: TSynMultiSyn
+    DefaultFilter = 'HTML Documents (*.htm;*.html)|*.htm;*.html'
+    Options.AutoDetectEnabled = False
+    Options.AutoDetectLineLimit = 0
+    Options.Visible = False
+    Schemes = <
+      item
+        StartExpr = '<style'
+        EndExpr = '</style>'
+        Highlighter = sehCss
+        SchemeName = 'Cascading Style Sheets'
+      end
+      item
+        StartExpr = '<script'
+        EndExpr = '</script>'
+        Highlighter = sehJScript
+        SchemeName = 'Javascript'
+      end>
+    DefaultHighlighter = sehHTML
+    DefaultLanguageName = 'HTML'
+    Left = 176
+    Top = 192
   end
 end

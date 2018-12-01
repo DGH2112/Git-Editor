@@ -5,7 +5,10 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    12 Nov 2018
+  @Date    24 Nov 2018
+
+  @todo    Add SGML tag completion
+  @todo    Add Print Preview
 
 **)
 Unit GitEditor.MainForm;
@@ -67,7 +70,7 @@ Uses
   SynHighlighterInno,
   SynHighlighterCSS,
   SynHighlighterGeneral,
-  SynEditOptionsDialog;
+  SynEditOptionsDialog, SynHighlighterMulti;
 
 Type
   (** An enumerate to define the statusbar columns. @nohints **)
@@ -145,6 +148,7 @@ Type
     Editor: TSynEdit;
     pmStatusbar: TPopupMenu;
     SynGeneralSyn: TSynGeneralSyn;
+    sehHTMLMH: TSynMultiSyn;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -554,14 +558,17 @@ Procedure TfrmGEMainForm.actFileOpenExecute(Sender: TObject);
 ResourceString
   strOpenFileTitle = 'Open Text File';
   strOpenBtnLbl = 'Open';
+  strAllFilters = 'All Filters';
   
 Var
   iComponent: Integer;
   H : TSynCustomHighlighter;
   FTI : TFileTypeItem;
+  strExts : String;
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileOpenExecute', tmoTiming);{$ENDIF}
+  //: @bug Does not prompt to save, just saves the file!
   If SaveFile(FFileName) Then
     Begin
       dlgOpen.DefaultExtension := strDefaultExt;
@@ -570,10 +577,20 @@ Begin
         If Components[iComponent] Is TSynCustomHighlighter Then
           Begin
             H := Components[iComponent] As TSynCustomHighlighter;
-            FTI := dlgOpen.FileTypes.Add;
-            FTI.DisplayName := GetShortHint(H.DefaultFilter);
-            FTI.FileMask := GetLongHint(H.DefaultFilter);
+            CodeSite.Send(H.Name, H.DefaultFilter);
+            If H.DefaultFilter <> '' Then
+              Begin
+                FTI := dlgOpen.FileTypes.Add;
+                FTI.DisplayName := GetShortHint(H.DefaultFilter);
+                FTI.FileMask := GetLongHint(H.DefaultFilter);
+                If strExts <> '' Then
+                  strExts := strExts + ';';
+                strExts := strExts + FTI.FileMask;
+              End;
           End;
+      FTI := dlgOpen.FileTypes.Add;
+      FTI.DisplayName := strAllFilters;
+      FTI.FileMask := strExts;
       FTI := dlgOpen.FileTypes.Add;
       FTI.DisplayName := GetShortHint(strDefaultFilter);
       FTI.FileMask := GetLongHint(strDefaultFilter);
