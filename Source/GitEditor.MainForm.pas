@@ -4,7 +4,7 @@
   text editor.
 
   @Author  David Hoyle
-  @Version 1.424
+  @Version 1.637
   @Date    22 Mar 2020
 
 **)
@@ -221,6 +221,7 @@ Type
     Procedure ShowHighlighterPopup(Const Pt : TPoint);
     Procedure HighlighterClick(Sender : TObject);
     Function  PromptToSaveFile(Const strFileName :String) : Boolean;
+    Procedure LoadThemes;
   Public
   End;
 
@@ -842,6 +843,7 @@ Begin
     strFileName := ExpandFileName('')
   Else
     strFileName := ExpandFileName(ParamStr(1));
+  LoadThemes;
   LoadSettings;
   OpenFile(strFileName);
 End;
@@ -1004,6 +1006,62 @@ Begin
       iOp In DefaultOptions) Then
       Include(FSearchOptions, iOp);
   SetCurrentDir(FINIFile.ReadString(strSectionName, strCurrentDirKey, GetCurrentDir));
+End;
+
+(**
+
+  This method loads any .VSF theme files from either the EXE location, INI location or the parent to the
+  INI location.
+
+  @precon  None.
+  @postcon Any found .VSF files are loaded if they are valid.
+
+**)
+Procedure TfrmGEMainForm.LoadThemes;
+
+  (**
+
+    This procedure searches for style files in the given directory.
+
+    @precon  None.
+    @postcon Any style files in the given directory are loaded if they are valid.
+
+    @param   strPath as a String as a constant
+
+  **)
+  Procedure SearchForThemes(Const strPath : String);
+
+  Const
+    strVCLStyleFileExt = '*.vsf';
+
+  Var
+    recSearch: TSearchRec;
+    iResult: Integer;
+  
+  Begin
+    iResult := System.SysUtils.FindFirst(strPath + strVCLStyleFileExt, faAnyFile, recSearch);
+    Try
+      While iResult = 0 Do
+        Begin
+          If TStyleManager.IsValidStyle(strPath + recSearch.Name) Then
+            TStyleManager.LoadFromFile(strPath + recSearch.Name);
+          iResult := FindNext(recSearch);
+        End;
+    Finally
+      System.SysUtils.FindClose(recSearch);
+    End;
+  End;
+
+Var
+  strPath : String;
+
+Begin
+  // EXE Location
+  strPath := ExtractFilePath(ParamStr(0));
+  SearchForThemes(strPath);
+  // %appdata%\Season's Fall\
+  strPath := ExtractFilePath(FINIFile.FileName);
+  SearchForThemes(strPath);
 End;
 
 (**
