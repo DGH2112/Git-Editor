@@ -4,7 +4,7 @@
   text editor.
 
   @Author  David Hoyle
-  @Version 1.409
+  @Version 1.424
   @Date    22 Mar 2020
 
 **)
@@ -827,6 +827,8 @@ Begin
   iSize := GetModuleFileName(HInstance, PChar(strBuffer), MAX_PATH);
   SetLength(strBuffer, iSize);
   strFileName := ChangeFileExt(strBuffer, '');
+  While (strFileName.Length > 0) And CharInSet(strFileName[strFileName.Length], ['0'..'9']) Do
+    Delete(strFileName, strFileName.Length, 1);
   strFileName := Format(strINIPattern, [strFileName, UserName, ComputerName]);
   SetLength(strBuffer, MAX_PATH);
   SHGetFolderPath(0, CSIDL_APPDATA Or CSIDL_FLAG_CREATE, 0, SHGFP_TYPE_CURRENT, PChar(strBuffer));
