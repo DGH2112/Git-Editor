@@ -1,0 +1,62 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{0190397A-0066-4C65-9FA5-789BCE3312BF}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="GitEditor.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="GitEditor64.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="GitEditor">
+        <MSBuild Projects="GitEditor.dproj"/>
+    </Target>
+    <Target Name="GitEditor:Clean">
+        <MSBuild Projects="GitEditor.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GitEditor:Make">
+        <MSBuild Projects="GitEditor.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="GitEditor64">
+        <MSBuild Projects="GitEditor64.dproj"/>
+    </Target>
+    <Target Name="GitEditor64:Clean">
+        <MSBuild Projects="GitEditor64.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GitEditor64:Make">
+        <MSBuild Projects="GitEditor64.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="GitEditor;GitEditor64"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="GitEditor:Clean;GitEditor64:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="GitEditor:Make;GitEditor64:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+    <ItemGroup Condition="'$(BuildGroup)'=='DEBUG'">
+        <BuildGroupProject Include="GitEditor.dproj">
+            <ProjectGuid>{9FD30497-A8DC-4C64-9EE8-6D348CFBD88B}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="GitEditor64.dproj">
+            <ProjectGuid>{DB3B8A87-E687-4D7A-A035-3010D52FD388}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+</Project>
