@@ -4,14 +4,8 @@
   text editor.
 
   @Author  David Hoyle
-  @Version 1.0
-  @Date    01 Dec 2018
-
-  @todo    Add a recently used files list
-  @todo    Add file associations
-  @todo    Add SGML tag completion
-  @todo    Add Print Preview
-  @todo    Add WinHelp / HTML configuration
+  @Version 1.099
+  @Date    22 Mar 2020
 
 **)
 Unit GitEditor.MainForm;
@@ -73,7 +67,9 @@ Uses
   SynHighlighterInno,
   SynHighlighterCSS,
   SynHighlighterGeneral,
-  SynEditOptionsDialog, SynHighlighterMulti;
+  SynEditOptionsDialog,
+  SynHighlighterMulti,
+  SynEditCodeFolding;
 
 Type
   (** An enumerate to define the statusbar columns. @nohints **)
@@ -168,6 +164,7 @@ Type
     procedure actEditReplaceExecute(Sender: TObject);
     procedure aeEventsHint(Sender: TObject);
     procedure actEditFindNextExecute(Sender: TObject);
+    procedure actViewFoldAllExecute(Sender: TObject);
     procedure tmMemoryTimer(Sender: TObject);
     procedure sbrStatusbarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel; const Rect: TRect);
     procedure EditorStatusChange(Sender: TObject; Changes: TSynStatusChanges);
@@ -204,6 +201,7 @@ Type
     FMemoryBlock   : Array[Low(TMemorySize)..High(TMemorySize)] Of Cardinal;
     FPercentage    : Double;
     FFileTypeIndex : Integer;
+    Procedure ApplyTheming(Const strVCLTheme: String);
   Strict Protected
     Procedure LoadSettings;
     Procedure SaveSettings;
@@ -571,7 +569,6 @@ Var
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileOpenExecute', tmoTiming);{$ENDIF}
-  //: @bug Does not prompt to save, just saves the file!
   If SaveFile(FFileName) Then
     Begin
       dlgOpen.DefaultExtension := strDefaultExt;
@@ -580,7 +577,6 @@ Begin
         If Components[iComponent] Is TSynCustomHighlighter Then
           Begin
             H := Components[iComponent] As TSynCustomHighlighter;
-            CodeSite.Send(H.Name, H.DefaultFilter);
             If H.DefaultFilter <> '' Then
               Begin
                 FTI := dlgOpen.FileTypes.Add;
@@ -701,6 +697,24 @@ Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'aeEventsHint', tmoTiming);{$ENDIF}
   sbrStatusBar.SimplePanel := Application.Hint <> '';
   sbrStatusBar.SimpleText  := Application.Hint;
+End;
+
+(**
+
+  This method applies the VCL Theme to the application.
+
+  @precon  None.
+  @postcon The application is themed if the theme is found.
+
+  @param   strVCLTheme as a String as a constant
+
+**)
+Procedure TfrmGEMainForm.ApplyTheming(Const strVCLTheme: String);
+
+Begin
+  {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'ApplyTheming', tmoTiming);{$ENDIF}
+  TStyleManager.TrySetStyle(strVCLTheme);
+  UpdateStatusBar(scVCLTheme, TStyleManager.ActiveStyle.Name);
 End;
 
 (**
@@ -830,6 +844,9 @@ Var
   
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormCreate', tmoTiming);{$ENDIF}
+  actViewFoldAll.Tag := Integer(ecFoldAll);
+  If Assigned(TStyleManager.Engine) Then
+    TStyleManager.Engine.RegisterStyleHook(TSynEdit, TMemoStyleHook);
   UpdateAppTitle;
   SetLength(strBuffer, MAX_PATH);
   iSize := GetModuleFileName(HInstance, PChar(strBuffer), MAX_PATH);
@@ -869,6 +886,8 @@ Begin
   SaveSettings;
   TDGHCustomSynEditFunctions.SaveToINIFile(FINIFile, Editor);
   FINIFile.Free;
+  //If Assigned(TStyleManager.Engine) Then
+  //  TStyleManager.Engine.UnregisterStyleHook(TSynEdit, TMemoStyleHook);
 End;
 
 (**
@@ -896,6 +915,7 @@ Begin
       Editor.Highlighter := Components[MI.Tag] As TSynCustomHighlighter;
       UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(Editor.Highlighter));
       TDGHCustomSynEditFunctions.LoadFromIniFile(FINIFile, Editor);
+      Editor.UseCodeFolding := True;
     End;
 End;
 
@@ -961,6 +981,7 @@ Begin
     Iteratehighlighters('*' + strExt);
   If Not Assigned(Editor.Highlighter) Then
     Editor.Highlighter := SynGeneralSyn;
+  Editor.UseCodeFolding := True;
   UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(Editor.Highlighter));
 End;
 
@@ -985,8 +1006,7 @@ Var
   
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'LoadSettings', tmoTiming);{$ENDIF}
-  TStyleManager.TrySetStyle(FINIFile.ReadString(strSetupINISection, strVCLThemeKey, strDefaultTheme));
-  UpdateStatusBar(scVCLTheme, TStyleManager.ActiveStyle.Name);
+  ApplyTheming(FINIFile.ReadString(strSetupINISection, strVCLThemeKey, strDefaultTheme));
   strSectionName := Format(strWindowPosition, [MonitorProfile]);
   recWndPlmt.length := SizeOf(TWindowPlacement);
   GetWindowPlacement(Handle, @recWndPlmt);
@@ -1320,7 +1340,7 @@ Var
 Begin
   R := Rect;
   Inc(R.Top);
-  Inc(R.Bottom);
+  Dec(R.Bottom);
   // Render Background
   StatusBar.Canvas.Brush.Color := iLightRed;
   StatusBar.Canvas.FillRect(R);
@@ -1636,13 +1656,8 @@ Begin
   If Sender Is TMenuItem Then
     Begin
       MI := Sender As TMenuItem;
-      TStyleManager.TrySetStyle(TStyleManager.StyleNames[MI.Tag]);
-      UpdateStatusBar(scVCLTheme, TStyleManager.ActiveStyle.Name);
+      ApplyTheming(TStyleManager.StyleNames[MI.Tag]);
     End;
 End;
 
 End.
-
-
-
-

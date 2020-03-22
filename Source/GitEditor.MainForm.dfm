@@ -42,9 +42,9 @@ object frmGEMainForm: TfrmGEMainForm
   end
   object sbrStatusbar: TStatusBar
     Left = 0
-    Top = 462
+    Top = 459
     Width = 746
-    Height = 19
+    Height = 22
     Panels = <
       item
         Alignment = taCenter
@@ -98,7 +98,7 @@ object frmGEMainForm: TfrmGEMainForm
     Left = 0
     Top = 26
     Width = 746
-    Height = 436
+    Height = 433
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -107,6 +107,14 @@ object frmGEMainForm: TfrmGEMainForm
     Font.Style = []
     PopupMenu = pabrContextMenu
     TabOrder = 2
+    CodeFolding.GutterShapeSize = 11
+    CodeFolding.CollapsedLineColor = clGrayText
+    CodeFolding.FolderBarLinesColor = clGrayText
+    CodeFolding.IndentGuidesColor = clGray
+    CodeFolding.IndentGuides = True
+    CodeFolding.ShowCollapsedLine = True
+    CodeFolding.ShowHintMark = True
+    UseCodeFolding = False
     Gutter.AutoSize = True
     Gutter.Font.Charset = DEFAULT_CHARSET
     Gutter.Font.Color = clWindowText

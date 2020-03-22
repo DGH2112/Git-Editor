@@ -30,19 +30,19 @@ uses
   ExceptionLog7,
   {$ENDIF EurekaLog}
   Vcl.Forms,
-  GitEditor.MainForm in 'Source\GitEditor.MainForm.pas' {frmGEMainForm},
-  GitEditor.CommonFunctions in 'Source\GitEditor.CommonFunctions.pas',
+  Vcl.Dialogs,
   Vcl.Themes,
-  Vcl.Styles;
+  Vcl.Styles,
+  DDetours,
+  Vcl.Styles.Fixes,
+  Vcl.Styles.Hooks,
+  GitEditor.MainForm in 'Source\GitEditor.MainForm.pas' {frmGEMainForm},
+  GitEditor.CommonFunctions in 'Source\GitEditor.CommonFunctions.pas';
 
 {$R *.res}
 
-
 Begin
   ReportMemoryLeaksOnShutdown := DebugHook <> 0;
-  {$IFDEF EurekaLog}
-  SetEurekaLogState(DebugHook = 0);
-  {$ENDIF}
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Git Editor';
