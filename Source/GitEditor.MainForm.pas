@@ -4,7 +4,7 @@
   text editor.
 
   @Author  David Hoyle
-  @Version 1.099
+  @Version 1.409
   @Date    22 Mar 2020
 
 **)
@@ -220,6 +220,7 @@ Type
     Procedure VCLThemeClick(Sender : TObject);
     Procedure ShowHighlighterPopup(Const Pt : TPoint);
     Procedure HighlighterClick(Sender : TObject);
+    Function  PromptToSaveFile(Const strFileName :String) : Boolean;
   Public
   End;
 
@@ -569,7 +570,7 @@ Var
 
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'actFileOpenExecute', tmoTiming);{$ENDIF}
-  If SaveFile(FFileName) Then
+  If PromptToSaveFile(FFileName) Then
     Begin
       dlgOpen.DefaultExtension := strDefaultExt;
       dlgOpen.FileTypes.Clear;
@@ -790,35 +791,9 @@ End;
 **)
 Procedure TfrmGEMainForm.FormCloseQuery(Sender: TObject; Var CanClose: Boolean);
 
-ResourceString
-  strInformation = 'Information';
-  strFileHasBeenModified = 'The file "%s" has been modified!';
-  strSaveChangesToFile = 'Save the changes to the file "%s"';
-  strDiscardChangesToFile = 'Discard the changes to the file "%s"';
-  strCancelAndDonCloseEditor = 'Cancel and don''t close the editor';
-
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormCloseQuery', tmoTiming);{$ENDIF}
-  If Editor.Modified Then
-    Begin
-      dlgTask.Title := strInformation;
-      dlgTask.Caption := Application.Title;
-      dlgTask.Flags := [tfAllowDialogCancellation, tfUseCommandLinks, tfPositionRelativeToWindow];
-      dlgTask.MainIcon := tdiInformation;
-      dlgTask.Text := Format(strFileHasBeenModified, [FFileName]);
-      dlgTask.CommonButtons := [];
-      dlgTask.Buttons.Clear;
-      dlgTask.AddButton(Format(strSaveChangesToFile, [FFileName]), mrYes, True);
-      dlgTask.AddButton(Format(strDiscardChangesToFile, [FFileName]), mrNo);
-      dlgTask.AddButton(strCancelAndDonCloseEditor, mrCancel);
-      If dlgTask.Execute(Handle) Then
-        Case dlgTask.ModalResult Of
-          mrYes:    CanClose := SaveFile(FFileName);
-          mrNo:     CanClose := true;
-          mrCancel: CanClose := false;
-        End Else
-          CanClose := False;
-    End;
+  CanClose := PromptToSaveFile(FFileName);
 End;
 
 (**
@@ -1130,6 +1105,7 @@ Begin
   UpdateCaption;
   HookHighlighter;
   TDGHCustomSynEditFunctions.LoadFromINIFile(FINIFile, Editor);  
+  Editor.Modified := False;
 End;
 
 (**
@@ -1155,6 +1131,51 @@ Begin
   Editor.AddKey(ecCommentBlock, Ord('C'), [ssAlt, ssCtrl], 0, []);
   Editor.AddKey(ecAutoCompletion, Ord('J'), [ssCtrl], 0, []);
   EditorStatusChange(Self, [scAll]);
+End;
+
+(**
+
+  This method checks to see if the file in the editor needs to be saved and prompt the user to see
+  if they want the file saved.
+
+  @precon  None.
+  @postcon If the file needs saving and the user confirmed the file is saved.
+
+  @param   strFileName as a String as a constant
+  @return  a Boolean
+
+**)
+Function TfrmGEMainForm.PromptToSaveFile(Const strFileName: String): Boolean;
+
+ResourceString
+  strInformation = 'Information';
+  strFileHasBeenModified = 'The file "%s" has been modified!';
+  strSaveChangesToFile = 'Save the changes to the file "%s"';
+  strDiscardChangesToFile = 'Discard the changes to the file "%s"';
+  strCancelAndDonCloseEditor = 'Cancel and don''t close the editor';
+
+Begin
+  Result := True;
+  If Editor.Modified Then
+    Begin
+      dlgTask.Title := strInformation;
+      dlgTask.Caption := Application.Title;
+      dlgTask.Flags := [tfAllowDialogCancellation, tfUseCommandLinks, tfPositionRelativeToWindow];
+      dlgTask.MainIcon := tdiInformation;
+      dlgTask.Text := Format(strFileHasBeenModified, [strFileName]);
+      dlgTask.CommonButtons := [];
+      dlgTask.Buttons.Clear;
+      dlgTask.AddButton(Format(strSaveChangesToFile, [strFileName]), mrYes, True);
+      dlgTask.AddButton(Format(strDiscardChangesToFile, [strFileName]), mrNo);
+      dlgTask.AddButton(strCancelAndDonCloseEditor, mrCancel);
+      If dlgTask.Execute(Handle) Then
+        Case dlgTask.ModalResult Of
+          mrYes:    Result := SaveFile(strFileName);
+          mrNo:     Result := True;
+          mrCancel: Result := False;
+        End Else
+          Result := False;
+    End;
 End;
 
 (**

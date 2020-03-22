@@ -12,6 +12,29 @@ BuildVer=395
 ResourceName=GitEditorITHVerInfo
 WarnBefore=0
 WarnAfter=0
+IncBuild.Make.Base=0
+IncBuild.Build.Base=0
+IncBuild.Check.Base=0
+IncBuild.MakeUnit.Base=0
+IncBuild.Make.Release=0
+IncBuild.Build.Release=0
+IncBuild.Check.Release=0
+IncBuild.MakeUnit.Release=0
+IncBuild.Make.CodeSiteTracing=0
+IncBuild.Build.CodeSiteTracing=0
+IncBuild.Check.CodeSiteTracing=0
+IncBuild.MakeUnit.CodeSiteTracing=0
+IncBuild.Make.Debug=0
+IncBuild.Build.Debug=0
+IncBuild.Check.Debug=0
+IncBuild.MakeUnit.Debug=0
+SaveModifiedFilesBeforeZipping=0
+
+[Zipping]
+Enabled=1
+ZipFile=D:\Documents\Web Page\Zips\GitEditor.zip
+BasePath=D:\Documents\RAD Studio\
+ExclusionFiles=
 
 [VersionInfo]
 CompanyName=Season's Fall Music
@@ -24,10 +47,4 @@ OriginalFilename=GitEditor
 ProductName=GitEditor
 ProductVersion=1.0
 Comments=GitEditor: A simple syntax highlighted text editor for files.
-
-[Zipping]
-Enabled=1
-ZipFile=D:\Documents\Web Page\Zips\GitEditor.zip
-BasePath=D:\Documents\RAD Studio\
-ExclusionFiles=
 
