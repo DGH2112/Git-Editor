@@ -177,6 +177,51 @@ object frmGEMainForm: TfrmGEMainForm
     object SelectAll1: TMenuItem
       Action = actEditSelectAll
     end
+    object N3: TMenuItem
+      Caption = '-'
+    end
+    object CodeFolding1: TMenuItem
+      Caption = 'Code Folding'
+      object FoldAll1: TMenuItem
+        Action = actViewFoldAll
+      end
+      object FoldNearest1: TMenuItem
+        Action = actViewFoldNearest
+      end
+      object FoldLevel11: TMenuItem
+        Action = actViewFoldLevel1
+      end
+      object UnfoldLevel21: TMenuItem
+        Action = actViewFoldLevel2
+      end
+      object FoldLevel31: TMenuItem
+        Action = actViewFoldLevel3
+      end
+      object FoldRegions1: TMenuItem
+        Action = actViewFoldRegions
+      end
+      object N4: TMenuItem
+        Caption = '-'
+      end
+      object UnfoldAll1: TMenuItem
+        Action = actViewUnfoldAll
+      end
+      object UnfoldNearest1: TMenuItem
+        Action = actViewUnfoldNearest
+      end
+      object UnfoldLevel11: TMenuItem
+        Action = actViewUnfoldLevel1
+      end
+      object UnfoldLevel22: TMenuItem
+        Action = actViewUnfoldLevel2
+      end
+      object UnfoldLevel31: TMenuItem
+        Action = actViewUnfoldLevel3
+      end
+      object UnfoldRegions1: TMenuItem
+        Action = actViewUnfoldRegions
+      end
+    end
   end
   object amActions: TActionManager
     ActionBars = <
@@ -421,12 +466,72 @@ object frmGEMainForm: TfrmGEMainForm
       ShortCut = 16456
       OnExecute = actEditReplaceExecute
     end
+    object actViewFoldAll: TAction
+      Category = 'View'
+      Caption = 'Fold &All'
+      OnExecute = actViewFoldExecute
+    end
+    object actViewFoldNearest: TAction
+      Category = 'View'
+      Caption = 'Fold &Nearest'
+      OnExecute = actViewFoldExecute
+    end
+    object actViewFoldLevel1: TAction
+      Category = 'View'
+      Caption = 'Fold Level 1'
+      OnExecute = actViewFoldExecute
+    end
+    object actViewFoldLevel2: TAction
+      Category = 'View'
+      Caption = 'Fold Level 2'
+      OnExecute = actViewFoldExecute
+    end
+    object actViewFoldLevel3: TAction
+      Category = 'View'
+      Caption = 'Fold Level 3'
+      OnExecute = actViewFoldExecute
+    end
+    object actViewFoldRegions: TAction
+      Category = 'View'
+      Caption = 'Fold &Regions'
+      OnExecute = actViewFoldExecute
+    end
+    object actViewUnfoldAll: TAction
+      Category = 'View'
+      Caption = 'Unfold All'
+      OnExecute = actViewFoldExecute
+    end
+    object actViewUnfoldNearest: TAction
+      Category = 'View'
+      Caption = 'Unfold Nearest'
+      OnExecute = actViewFoldExecute
+    end
+    object actViewUnfoldLevel1: TAction
+      Category = 'View'
+      Caption = 'Unfold Level 1'
+      OnExecute = actViewFoldExecute
+    end
+    object actViewUnfoldLevel2: TAction
+      Category = 'View'
+      Caption = 'Unfold Level 2'
+      OnExecute = actViewFoldExecute
+    end
+    object actViewUnfoldLevel3: TAction
+      Category = 'View'
+      Caption = 'Unfold Level 3'
+      OnExecute = actViewFoldExecute
+    end
+    object actViewUnfoldRegions: TAction
+      Category = 'View'
+      Caption = 'Unfold Regions'
+      OnExecute = actViewFoldExecute
+    end
   end
   object ilImages: TImageList
     Left = 32
     Top = 88
     Bitmap = {
-      494C010110001800280110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110001800040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

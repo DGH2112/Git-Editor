@@ -4,7 +4,7 @@
   text editor.
 
   @Author  David Hoyle
-  @Version 1.637
+  @Version 1.778
   @Date    22 Mar 2020
 
 **)
@@ -148,6 +148,33 @@ Type
     pmStatusbar: TPopupMenu;
     SynGeneralSyn: TSynGeneralSyn;
     sehHTMLMH: TSynMultiSyn;
+    actViewFoldAll: TAction;
+    N3: TMenuItem;
+    CodeFolding1: TMenuItem;
+    FoldAll1: TMenuItem;
+    actViewFoldNearest: TAction;
+    actViewFoldLevel1: TAction;
+    actViewFoldLevel2: TAction;
+    actViewFoldLevel3: TAction;
+    actViewFoldRegions: TAction;
+    actViewUnfoldAll: TAction;
+    actViewUnfoldNearest: TAction;
+    actViewUnfoldLevel1: TAction;
+    actViewUnfoldLevel2: TAction;
+    actViewUnfoldLevel3: TAction;
+    actViewUnfoldRegions: TAction;
+    FoldNearest1: TMenuItem;
+    FoldLevel11: TMenuItem;
+    UnfoldLevel21: TMenuItem;
+    FoldLevel31: TMenuItem;
+    FoldRegions1: TMenuItem;
+    N4: TMenuItem;
+    UnfoldAll1: TMenuItem;
+    UnfoldNearest1: TMenuItem;
+    UnfoldLevel11: TMenuItem;
+    UnfoldLevel22: TMenuItem;
+    UnfoldLevel31: TMenuItem;
+    UnfoldRegions1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -164,7 +191,7 @@ Type
     procedure actEditReplaceExecute(Sender: TObject);
     procedure aeEventsHint(Sender: TObject);
     procedure actEditFindNextExecute(Sender: TObject);
-    procedure actViewFoldAllExecute(Sender: TObject);
+    procedure actViewFoldExecute(Sender: TObject);
     procedure tmMemoryTimer(Sender: TObject);
     procedure sbrStatusbarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel; const Rect: TRect);
     procedure EditorStatusChange(Sender: TObject; Changes: TSynStatusChanges);
@@ -683,6 +710,12 @@ Begin
   TfrmEditorOptions.Execute(Self, Editor, True);
 End;
 
+Procedure TfrmGEMainForm.actViewFoldExecute(Sender: TObject);
+
+Begin
+  Editor.ExecuteCommand(TSynEditorCommand(TAction(Sender).Tag), #0, Nil);
+End;
+
 (**
 
   This is an application on hint event handler.
@@ -821,6 +854,17 @@ Var
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormCreate', tmoTiming);{$ENDIF}
   actViewFoldAll.Tag := Integer(ecFoldAll);
+  actViewFoldNearest.Tag := Integer(ecFoldNearest);
+  actViewFoldLevel1.Tag := Integer(ecFoldLevel1);
+  actViewFoldLevel2.Tag := Integer(ecFoldLevel2);
+  actViewFoldLevel3.Tag := Integer(ecFoldLevel3);
+  actViewFoldRegions.Tag := Integer(ecFoldRegions);
+  actViewUnfoldAll.Tag := Integer(ecUnfoldAll);
+  actViewUnfoldNearest.Tag := Integer(ecUnfoldNearest);
+  actViewUnfoldLevel1.Tag := Integer(ecUnfoldLevel1);
+  actViewUnfoldLevel2.Tag := Integer(ecUnfoldLevel2);
+  actViewUnfoldLevel3.Tag := Integer(ecUnfoldLevel3);
+  actViewUnfoldRegions.Tag := Integer(ecUnfoldRegions);
   If Assigned(TStyleManager.Engine) Then
     TStyleManager.Engine.RegisterStyleHook(TSynEdit, TMemoStyleHook);
   UpdateAppTitle;
