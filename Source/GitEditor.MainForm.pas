@@ -4,8 +4,8 @@
   text editor.
 
   @Author  David Hoyle
-  @Version 1.778
-  @Date    22 Mar 2020
+  @Version 2.020
+  @Date    28 Mar 2020
 
 **)
 Unit GitEditor.MainForm;
@@ -175,6 +175,7 @@ Type
     UnfoldLevel22: TMenuItem;
     UnfoldLevel31: TMenuItem;
     UnfoldRegions1: TMenuItem;
+    tmOpenFile: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -199,6 +200,7 @@ Type
       var Action: TSynReplaceAction);
     procedure sbrStatusbarMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
       Y: Integer);
+    procedure tmOpenFileTimer(Sender: TObject);
   Strict Private
     Type
       (** An enumerate to define the blocks of memory. @nohints **)
@@ -228,7 +230,7 @@ Type
     FMemoryBlock   : Array[Low(TMemorySize)..High(TMemorySize)] Of Cardinal;
     FPercentage    : Double;
     FFileTypeIndex : Integer;
-    Procedure ApplyTheming(Const strVCLTheme: String);
+    FCurrentDir    : String;
   Strict Protected
     Procedure LoadSettings;
     Procedure SaveSettings;
@@ -249,6 +251,7 @@ Type
     Procedure HighlighterClick(Sender : TObject);
     Function  PromptToSaveFile(Const strFileName :String) : Boolean;
     Procedure LoadThemes;
+    Procedure ApplyTheming(Const strVCLTheme: String);
   Public
   End;
 
@@ -710,6 +713,16 @@ Begin
   TfrmEditorOptions.Execute(Self, Editor, True);
 End;
 
+(**
+
+  This is an on execute event handler for the XxFoldXxxx action.
+
+  @precon  None.
+  @postcon Folds or unfolds the code editor depending upon the enumerate stored in the Tag property.
+
+  @param   Sender as a TObject
+
+**)
 Procedure TfrmGEMainForm.actViewFoldExecute(Sender: TObject);
 
 Begin
@@ -883,13 +896,9 @@ Begin
     ForceDirectories(strBuffer);
   FINIFile := TMemIniFile.Create(strBuffer + ExtractFileName(strFileName));
   PatchEditor;
-  If ParamCount = 0 Then
-    strFileName := ExpandFileName('')
-  Else
-    strFileName := ExpandFileName(ParamStr(1));
   LoadThemes;
   LoadSettings;
-  OpenFile(strFileName);
+  tmOpenFile.Enabled := True;
 End;
 
 (**
@@ -1049,7 +1058,7 @@ Begin
     If FINIFile.ReadBool(strSearchOptionsIniSection, GetEnumName(TypeInfo(TSearchOption), Ord(iOp)),
       iOp In DefaultOptions) Then
       Include(FSearchOptions, iOp);
-  SetCurrentDir(FINIFile.ReadString(strSectionName, strCurrentDirKey, GetCurrentDir));
+  FCurrentDir := FINIFile.ReadString(strSectionName, strCurrentDirKey, GetCurrentDir);
 End;
 
 (**
@@ -1687,6 +1696,35 @@ End;
 
 (**
 
+  This is an on timer event handler for the opening of a file passed on the command line.
+
+  @precon  None.
+  @postcon Once the applications main form is visible the file is opened and the current directory set.
+
+  @param   Sender as a TObject
+
+**)
+Procedure TfrmGEMainForm.tmOpenFileTimer(Sender: TObject);
+
+Var
+  strFileName : String;
+  
+Begin
+  If Visible Then
+    Begin
+      tmOpenFile.Enabled := False;
+      If ParamCount = 0 Then
+        strFileName := ExpandFileName('')
+      Else
+        strFileName := ExpandFileName(ParamStr(1));
+      OpenFile(strFileName);
+      //: @note Set current dir after loading file else ExpandFileName above will use the current directory.
+      SetCurrentDir(FCurrentDir);
+    End;
+End;
+
+(**
+
   This method updates the application title with version / build information.
 
   @precon  None.
@@ -1700,10 +1738,15 @@ Const
 
 ResourceString
   {$IFDEF DEBUG}
-  strGitEditorBuild = 'Git Editor %d.%d%s (DEBUG Build %d.%d.%d.%d)';
+  strGitEditorBuild = 'Git Editor %d.%d%s [%s] (DEBUG Build %d.%d.%d.%d)';
   {$ELSE}
-  strGitEditorBuild = 'Git Editor %d.%d%s (Build %d.%d.%d.%d)';
+  strGitEditorBuild = 'Git Editor %d.%d%s [%s] (Build %d.%d.%d.%d)';
   {$ENDIF}
+  {$IFDEF WIN32}
+  strPlatform = '32-Bit';
+  {$ELSE}
+  strPlatform = '64-Bit';
+  {$ENDIF WIN32}
 
 Var
   BuildInfo : TGEBuildInfo;
@@ -1715,6 +1758,7 @@ Begin
       BuildInfo.FMajor,
       BuildInfo.FMinor,
       strBugFix[BuildInfo.FRelease + 1],
+      strPlatform,
       BuildInfo.FMajor,
       BuildInfo.FMinor,
       BuildInfo.FRelease,

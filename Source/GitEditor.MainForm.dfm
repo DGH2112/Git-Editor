@@ -1410,4 +1410,11 @@ object frmGEMainForm: TfrmGEMainForm
     Left = 176
     Top = 192
   end
+  object tmOpenFile: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = tmOpenFileTimer
+    Left = 184
+    Top = 40
+  end
 end
