@@ -1,11 +1,11 @@
 (**
   
   This project is a simple lightweight text editor (single window) for use with Git or for simple and
-  quick tetx edit changes.
+  quick text edit changes.
 
   @Author  David Hoyle
-  @Version 1.0
-  @Date    11 Nov 2018
+  @Version 1.002
+  @Date    05 Feb 2022
 
   @nocheck HardCodedString
   
@@ -18,15 +18,15 @@ uses
   {$IFDEF EurekaLog}
   EMemLeaks,
   EResLeaks,
-  ESendMailMAPI,
-  ESendMailSMAPI,
-  EDialogWinAPIMSClassic,
-  EDialogWinAPIEurekaLogDetailed,
-  EDialogWinAPIStepsToReproduce,
   EDebugExports,
   EDebugJCL,
   EMapWin32,
   EAppVCL,
+  EDialogWinAPIMSClassic,
+  EDialogWinAPIEurekaLogDetailed,
+  EDialogWinAPIStepsToReproduce,
+  ESendMailMAPI,
+  ESendMailSMAPI,
   ExceptionLog7,
   {$ENDIF EurekaLog}
   Vcl.Forms,
@@ -49,3 +49,4 @@ Begin
   Application.CreateForm(TfrmGEMainForm, frmGEMainForm);
   Application.Run;
 End.
+

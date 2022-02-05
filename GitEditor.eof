@@ -1,5 +1,4 @@
 ﻿
-
 [Exception Log]
 EurekaLog Version=8000
 Activate=1
@@ -114,7 +113,6 @@ soActCtlsControlClass=1
 soActCtlsControlText=1
 soActCtlsFormClass=1
 soActCtlsFormText=1
-soCmpDisplayDPI=1
 soCmpDisplayMode=1
 soCmpFreeDisk=1
 soCmpFreeMemory=1
@@ -143,4 +141,5 @@ soUserID=1
 soUserPrivileges=1
 TextsCollection=""
 _CustomProfile=""
+
 

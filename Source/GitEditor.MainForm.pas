@@ -4,8 +4,8 @@
   text editor.
 
   @Author  David Hoyle
-  @Version 2.020
-  @Date    28 Mar 2020
+  @Version 2.069
+  @Date    05 Feb 2022
 
 **)
 Unit GitEditor.MainForm;
@@ -86,8 +86,6 @@ Type
 
   (** A class to represent the main form of the aplpication - a single window editor. **)
   TfrmGEMainForm = Class(TForm)
-    sehBNF: TSynBNFSyn;
-    sehMD: TSynMDSyn;
     pabrContextMenu: TPopupActionBar;
     Undo1: TMenuItem;
     Redo1: TMenuItem;
@@ -231,6 +229,8 @@ Type
     FPercentage    : Double;
     FFileTypeIndex : Integer;
     FCurrentDir    : String;
+    sehMD          : TSynMDSyn;
+    sehBNF         : TSynBNFSyn;
   Strict Protected
     Procedure LoadSettings;
     Procedure SaveSettings;
@@ -264,9 +264,9 @@ Implementation
 {$R *.dfm}
 
 Uses
-  {$IFDEF DEBUG}
+  {$IFDEF CODESITE}
   CodeSiteLogging,
-  {$ENDIF}
+  {$ENDIF CODESITE}
   System.StrUtils,
   System.UITypes,
   System.TypInfo,
@@ -830,8 +830,6 @@ End;
   @postcon If the editor has changed, a message diaogue is shown asking whether the file should be saved
            . If yes is pressed the file is saved.
 
-  @parma   CanClose as a bool as a reference
-
   @param   Sender   as a TObject
   @param   CanClose as a Boolean as a reference
 
@@ -866,6 +864,8 @@ Var
   
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormCreate', tmoTiming);{$ENDIF}
+  sehMD := TSynMDSyn.Create(Self);
+  sehBNF := TSynBNFSyn.Create(Self);
   actViewFoldAll.Tag := Integer(ecFoldAll);
   actViewFoldNearest.Tag := Integer(ecFoldNearest);
   actViewFoldLevel1.Tag := Integer(ecFoldLevel1);

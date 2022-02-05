@@ -11,12 +11,10 @@ object frmGEMainForm: TfrmGEMainForm
   Font.Height = -13
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   ScreenSnap = True
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 16
   object atbrToolBar: TActionToolBar
     Left = 0
@@ -130,21 +128,6 @@ object frmGEMainForm: TfrmGEMainForm
     OnReplaceText = EditorReplaceText
     OnStatusChange = EditorStatusChange
     FontSmoothing = fsmClearType
-  end
-  object sehBNF: TSynBNFSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
-    Left = 280
-    Top = 216
-  end
-  object sehMD: TSynMDSyn
-    DefaultFilter = 'Markdown Files (*.md)|*.md'
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
-    Left = 112
-    Top = 40
   end
   object pabrContextMenu: TPopupActionBar
     Images = ilImages
