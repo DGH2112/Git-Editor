@@ -103,31 +103,40 @@ object frmGEMainForm: TfrmGEMainForm
     Font.Height = -13
     Font.Name = 'Courier New'
     Font.Style = []
+    Font.Quality = fqClearTypeNatural
     PopupMenu = pabrContextMenu
     TabOrder = 2
-    CodeFolding.GutterShapeSize = 11
-    CodeFolding.CollapsedLineColor = clGrayText
-    CodeFolding.FolderBarLinesColor = clGrayText
-    CodeFolding.IndentGuidesColor = clGray
-    CodeFolding.IndentGuides = True
     CodeFolding.ShowCollapsedLine = True
-    CodeFolding.ShowHintMark = True
     UseCodeFolding = False
-    Gutter.AutoSize = True
     Gutter.Font.Charset = DEFAULT_CHARSET
     Gutter.Font.Color = clWindowText
     Gutter.Font.Height = -13
-    Gutter.Font.Name = 'Tahoma'
+    Gutter.Font.Name = 'Consolas'
     Gutter.Font.Style = []
-    Gutter.ModificationColorModified = clRed
+    Gutter.Font.Quality = fqClearTypeNatural
     Gutter.ShowLineNumbers = True
-    Gutter.ShowModification = True
-    Gutter.UseFontStyle = False
-    Options = [eoAltSetsColumnMode, eoAutoIndent, eoAutoSizeMaxScrollWidth, eoDragDropEditing, eoEnhanceHomeKey, eoEnhanceEndKey, eoGroupUndo, eoHideShowScrollbars, eoKeepCaretX, eoRightMouseMovesCursor, eoScrollHintFollows, eoScrollPastEof, eoScrollPastEol, eoShowScrollHint, eoSmartTabDelete, eoSmartTabs, eoSpecialLineDefaultFg, eoTabIndent, eoTabsToSpaces, eoTrimTrailingSpaces]
+    Gutter.Bands = <
+      item
+        Kind = gbkMarks
+        Width = 13
+      end
+      item
+        Kind = gbkLineNumbers
+      end
+      item
+        Kind = gbkFold
+      end
+      item
+        Kind = gbkTrackChanges
+      end
+      item
+        Kind = gbkMargin
+        Width = 3
+      end>
     SearchEngine = seRegexSearch
+    SelectedColor.Alpha = 0.400000005960464500
     OnReplaceText = EditorReplaceText
     OnStatusChange = EditorStatusChange
-    FontSmoothing = fsmClearType
   end
   object pabrContextMenu: TPopupActionBar
     Images = ilImages
@@ -1181,51 +1190,28 @@ object frmGEMainForm: TfrmGEMainForm
       F81FC03FFF8F8001F81FFFFFFFFFFFFF00000000000000000000000000000000
       000000000000}
   end
-  object seOptionsDialog: TSynEditOptionsDialog
-    UseExtendedStrings = False
-    Left = 32
-    Top = 192
-  end
   object sehIni: TSynIniSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 280
     Top = 160
   end
   object sehDfm: TSynDfmSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 280
     Top = 104
   end
   object sehBat: TSynBatSyn
     DefaultFilter = 'MS-DOS Batch Files (*.bat;*.cmd;*.btm)|*.bat;*.cmd;*.btm'
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 280
     Top = 48
   end
   object sehHTML: TSynHTMLSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 112
     Top = 192
   end
   object sehCPP: TSynCppSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 112
     Top = 136
   end
   object sehPascal: TSynPasSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 112
     Top = 88
   end
@@ -1270,86 +1256,50 @@ object frmGEMainForm: TfrmGEMainForm
     Top = 160
   end
   object sehCss: TSynCssSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 536
     Top = 40
   end
   object sehInno: TSynInnoSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 536
     Top = 96
   end
   object sehJava: TSynJavaSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 536
     Top = 152
   end
   object sehJScript: TSynJScriptSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 224
     Top = 264
   end
   object sehVBScript: TSynVBScriptSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 288
     Top = 264
   end
   object sehPerl: TSynPerlSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 400
     Top = 264
   end
   object sehPython: TSynPythonSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 56
     Top = 264
   end
   object sehRC: TSynRCSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 112
     Top = 264
   end
   object sehSQL: TSynSQLSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 168
     Top = 264
   end
   object sehSML: TSynSMLSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 496
     Top = 264
   end
   object sehVB: TSynVBSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Left = 544
     Top = 264
   end
   object sehXML: TSynXMLSyn
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     WantBracesParsed = False
     Left = 592
     Top = 264
@@ -1360,21 +1310,13 @@ object frmGEMainForm: TfrmGEMainForm
   end
   object SynGeneralSyn: TSynGeneralSyn
     DefaultFilter = 'General Text Files (*.txt)|*.txt'
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
-    Comments = [csAnsiStyle, csPasStyle, csCStyle, csAsmStyle, csBasStyle, csCPPStyle]
     DetectPreprocessor = False
     StringDelim = sdSingleAndDoubleQuote
-    StringMultiLine = False
     Left = 400
     Top = 320
   end
   object sehHTMLMH: TSynMultiSyn
     DefaultFilter = 'HTML Documents (*.htm;*.html)|*.htm;*.html'
-    Options.AutoDetectEnabled = False
-    Options.AutoDetectLineLimit = 0
-    Options.Visible = False
     Schemes = <
       item
         StartExpr = '<style'
@@ -1392,12 +1334,5 @@ object frmGEMainForm: TfrmGEMainForm
     DefaultLanguageName = 'HTML'
     Left = 176
     Top = 192
-  end
-  object tmOpenFile: TTimer
-    Enabled = False
-    Interval = 100
-    OnTimer = tmOpenFileTimer
-    Left = 184
-    Top = 40
   end
 end

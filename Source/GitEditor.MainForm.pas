@@ -4,8 +4,8 @@
   text editor.
 
   @Author  David Hoyle
-  @Version 2.069
-  @Date    05 Feb 2022
+  @Version 2.552
+  @Date    21 Feb 2022
 
 **)
 Unit GitEditor.MainForm;
@@ -84,7 +84,7 @@ Type
     scMemoryUseage
   );
 
-  (** A class to represent the main form of the aplpication - a single window editor. **)
+  (** A class to represent the main form of the application - a single window editor. **)
   TfrmGEMainForm = Class(TForm)
     pabrContextMenu: TPopupActionBar;
     Undo1: TMenuItem;
@@ -113,7 +113,6 @@ Type
     actEditFind: TAction;
     actEditReplace: TAction;
     ilImages: TImageList;
-    seOptionsDialog: TSynEditOptionsDialog;
     sehIni: TSynIniSyn;
     sehDfm: TSynDfmSyn;
     sehBat: TSynBatSyn;
@@ -173,7 +172,6 @@ Type
     UnfoldLevel22: TMenuItem;
     UnfoldLevel31: TMenuItem;
     UnfoldRegions1: TMenuItem;
-    tmOpenFile: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -203,14 +201,14 @@ Type
     Type
       (** An enumerate to define the blocks of memory. @nohints **)
       TMemorySize = (dmtLarge, dmtMedium, dmtSmall);
-      (** A record to describe a name index pairing for use in sorting the Highighters and VCL
-          Themings @nohints **)
+      (** A record to describe a name index pairing for use in sorting the high lighters and VCL
+          theming @nohints **)
       TGENameIndexRec = Record
         FName  : String;
         FIndex : Integer;
         Constructor Create(Const strName : String; Const iIndex : Integer);
       End;
-    (** An IComparer class to allow for custom sorting of the TList<T> collection. **)
+    (** An TComparer class to allow for custom sorting of the TGENameIndexRec collection. **)
     TGENameIndexComparer = Class(TComparer<TGENameIndexRec>)
     Strict Private
     Strict Protected
@@ -252,6 +250,8 @@ Type
     Function  PromptToSaveFile(Const strFileName :String) : Boolean;
     Procedure LoadThemes;
     Procedure ApplyTheming(Const strVCLTheme: String);
+    Procedure LoadHighlighters;
+    Procedure SaveHighlighters;
   Public
   End;
 
@@ -286,7 +286,7 @@ Type
   TGEStatusColumnHelper = Record Helper For TGEStatusColumn
     Function ColumnIndex : Integer;
   End;
-  (** A helper class for task dialogues to make it easier to intialise the dialogue and added button
+  (** A helper class for task dialogues to make it easier to initialise the dialogue and added button
       @nohints **)
   TGETaskDialogHelper = Class Helper For TTaskDialog
     Procedure AddButton(Const strCaption : String; Const iModalResult : TModalResult;
@@ -304,27 +304,27 @@ ResourceString
   strAllFiles = 'All files (*.*)';
 
 Const
-  (** An ini key for the left of the main window position. **)
+  (** An INI key for the left of the main window position. **)
   strLeft = 'Left';
-  (** An ini key for the top of the main window position. **)
+  (** An INI key for the top of the main window position. **)
   strTop = 'Top';
-  (** An ini key for the height of the main window size. **)
+  (** An INI key for the height of the main window size. **)
   strHeight = 'Height';
-  (** An ini key for the width of the main window size. **)
+  (** An INI key for the width of the main window size. **)
   strWidth = 'Width';
   (** A constant for the default Open / Save dialogue file extension. **)
   strDefaultExt = '*.txt';
-  (** An ini section for the search options. **)
+  (** An INI section for the search options. **)
   strSearchOptionsIniSection = 'Search Options';
   (** A constant for the INI Section name for the VCL Theme Key **)
   strSetupINISection = 'Setup';
   (** A constant name for the VCL Theme key in the INI file. **)
   strVCLThemeKey = 'VCL Theme';
-  (** A constant name for the FileTypeIndex key in the INI File. **)
+  (** A constant name for the File Type Index key in the INI File. **)
   strFileTypeIndexKey = 'FileTypeIndex';
-  (** A constant name for the WindowState key in the INI File. **)
+  (** A constant name for the Window State key in the INI File. **)
   strWindowStateKey = 'WindowState';
-  (** A constant name for the CurrentDir key in the INI File. **)
+  (** A constant name for the Current Directory key in the INI File. **)
   strCurrentDirKey = 'CurrentDir';
 
 (**
@@ -421,7 +421,7 @@ End;
 
 (**
 
-  This is an overridden Ciompare method of the IComparer interface.
+  This is an overridden Compare method of the TComparer interface.
 
   @precon  None.
   @postcon This method sorts the TGENameIndexRec records by their FName field.
@@ -460,7 +460,7 @@ End;
   This is an on execute event handler for the Edit Find Next action.
 
   @precon  None.
-  @postcon Finds the next occurrance of the last search text.
+  @postcon Finds the next occurrence of the last search text.
 
   @param   Sender as a TObject
 
@@ -490,7 +490,7 @@ End;
   This method is an on execute event handler for the Edit Redo action.
 
   @precon  None.
-  @postcon Redoes the last undo in the editor.
+  @postcon Re-does the last undo in the editor.
 
   @param   Sender as a TObject
 
@@ -573,7 +573,6 @@ Begin
   Editor.Clear;
   UpdateCaption;
   HookHighlighter;
-  TDGHCustomSynEditFunctions.LoadFromINIFile(FINIFile, Editor);
 End;
 
 (**
@@ -646,10 +645,10 @@ End;
 
 (**
 
-  This is an on execute event handler for the File SaveAs event handler.
+  This is an on execute event handler for the File Save As event handler.
 
   @precon  None.
-  @postcon Prompts the user to save the file to another fiename.
+  @postcon Prompts the user to save the file to another filename.
 
   @param   Sender as a TObject
 
@@ -698,7 +697,7 @@ End;
 
 (**
 
-  This is an on execute event handelr for the Tools Options action.
+  This is an on execute event handler for the Tools Options action.
 
   @precon  None.
   @postcon Displays the editor options dialogue.
@@ -770,7 +769,7 @@ End;
   This method haves the prompting for the replacement of text.
 
   @precon  None.
-  @postcon A confirmtion dialogue is displayed for replacements.
+  @postcon A confirmation dialogue is displayed for replacements.
 
   @param   Sender   as a TObject
   @param   ASearch  as a String as a constant
@@ -824,10 +823,10 @@ End;
 
 (**
 
-  This is an on close query event hanler for the form.
+  This is an on close query event handler for the form.
 
   @precon  None.
-  @postcon If the editor has changed, a message diaogue is shown asking whether the file should be saved
+  @postcon If the editor has changed, a message dialogue is shown asking whether the file should be saved
            . If yes is pressed the file is saved.
 
   @param   Sender   as a TObject
@@ -856,7 +855,9 @@ Procedure TfrmGEMainForm.FormCreate(Sender: TObject);
 ResourceString
   strINIPattern = '%s Settings for %s on %s.INI';
   strSeasonsFall = '\Season''s Fall\';
-  
+  strMarkdownFilter = 'Markdown (*.md)|*.md';
+  strBackusNaurFilter = 'Backus-Naur (*.bnf)|*.bnf';
+
 Var
   strBuffer : String;
   iSize : Integer;
@@ -865,7 +866,9 @@ Var
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormCreate', tmoTiming);{$ENDIF}
   sehMD := TSynMDSyn.Create(Self);
+  sehMD.DefaultFilter := strMarkdownFilter;
   sehBNF := TSynBNFSyn.Create(Self);
+  sehBNF.DefaultFilter := strBackusNaurFilter;
   actViewFoldAll.Tag := Integer(ecFoldAll);
   actViewFoldNearest.Tag := Integer(ecFoldNearest);
   actViewFoldLevel1.Tag := Integer(ecFoldLevel1);
@@ -898,7 +901,9 @@ Begin
   PatchEditor;
   LoadThemes;
   LoadSettings;
-  tmOpenFile.Enabled := True;
+  TDGHCustomSynEditFunctions.LoadFromINIFile(FINIFile, Editor);
+  LoadHighlighters;
+  tmOpenFileTimer(Self);
 End;
 
 (**
@@ -916,10 +921,9 @@ Procedure TfrmGEMainForm.FormDestroy(Sender: TObject);
 Begin
   {$IFDEF CODESITE}CodeSite.TraceMethod(Self, 'FormDestroy', tmoTiming);{$ENDIF}
   SaveSettings;
+  SaveHighlighters;
   TDGHCustomSynEditFunctions.SaveToINIFile(FINIFile, Editor);
   FINIFile.Free;
-  //If Assigned(TStyleManager.Engine) Then
-  //  TStyleManager.Engine.UnregisterStyleHook(TSynEdit, TMemoStyleHook);
 End;
 
 (**
@@ -946,7 +950,6 @@ Begin
       TDGHCustomSynEditFunctions.SaveToIniFile(FINIFile, Editor);
       Editor.Highlighter := Components[MI.Tag] As TSynCustomHighlighter;
       UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(Editor.Highlighter));
-      TDGHCustomSynEditFunctions.LoadFromIniFile(FINIFile, Editor);
       Editor.UseCodeFolding := True;
     End;
 End;
@@ -963,7 +966,7 @@ Procedure TfrmGEMainForm.HookHighlighter;
 
   (**
 
-    This method iterates through the highlighters trying to match the given extension to one of their
+    This method iterates through the high lighters trying to match the given extension to one of their
     known extensions. If found the editors highlighter is set
 
     @precon  None.
@@ -1015,6 +1018,30 @@ Begin
     Editor.Highlighter := SynGeneralSyn;
   Editor.UseCodeFolding := True;
   UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(Editor.Highlighter));
+End;
+
+(**
+
+  This method loads all the highlighter settings from the INI File.
+
+  @precon  None.
+  @postcon All the high-lighters have their settings loaded.
+
+**)
+Procedure TfrmGEMainForm.LoadHighlighters;
+
+Var
+  iComponent: Integer;
+
+Begin
+  For iComponent := 0 To ComponentCount - 1 Do
+    If Components[iComponent] Is TSynCustomHighlighter Then
+      Begin
+        TDGHCustomSynEditFunctions.LoadHighlighterFromINIFile(
+          FINIFile,
+          Components[iComponent] As TSynCustomHighlighter
+        );
+      End;
 End;
 
 (**
@@ -1120,10 +1147,10 @@ End;
 (**
 
   This method returns a unique profile string for the monitor configuration so that the position and size
-  of the maion window can be monitor configuration specific.
+  of the main window can be monitor configuration specific.
 
   @precon  None.
-  @postcon A unqiue string for the monitor configuration is returned.
+  @postcon A unique string for the monitor configuration is returned.
 
   @return  a String
 
@@ -1155,7 +1182,7 @@ End;
   If a filename is passed on the command line, the file is opened in the editor.
 
   @precon  None.
-  @postcon The file from the first parameter of the command line is open if provied else a default
+  @postcon The file from the first parameter of the command line is open if provided else a default
            untitled file is assumed.
 
   @param   strFileName as a String as a constant
@@ -1178,9 +1205,8 @@ Begin
   If FileExists(FFileName) Then
     Begin
       Editor.Highlighter := Nil;
-      Editor.WordWrap := False; //: @note Next 2 lines are for the performance of loading LARGE files.
-      Editor.Gutter.AutoSize := False;
       Editor.Lines.LoadFromFile(FFileName);
+      Editor.ClearTrackChanges;
       Editor.ReadOnly := (GetFileAttributes(PChar(FFileName)) And FILE_ATTRIBUTE_READONLY <> 0);
     End Else
     Begin
@@ -1217,7 +1243,6 @@ Begin
   EditorStatusChange(Nil, [scAll]);
   UpdateCaption;
   HookHighlighter;
-  TDGHCustomSynEditFunctions.LoadFromINIFile(FINIFile, Editor);  
   Editor.Modified := False;
 End;
 
@@ -1265,7 +1290,7 @@ ResourceString
   strFileHasBeenModified = 'The file "%s" has been modified!';
   strSaveChangesToFile = 'Save the changes to the file "%s"';
   strDiscardChangesToFile = 'Discard the changes to the file "%s"';
-  strCancelAndDonCloseEditor = 'Cancel and don''t close the editor';
+  strCancelAndDonCloseEditor = 'Cancel and do not close the editor';
 
 Begin
   Result := True;
@@ -1296,7 +1321,7 @@ End;
   This method saves the file in the editor.
 
   @precon  None.
-  @postcon The file is saved if the underlying filename exists else a SaveAs dialogue is shown. If the 
+  @postcon The file is saved if the underlying filename exists else a Save As dialogue is shown. If the 
            file is saved this function returns true.
 
   @param   strFileName as a String as a constant
@@ -1319,7 +1344,7 @@ End;
 
 (**
 
-  This method prompts the user tp saves the file to a new filename.
+  This method prompts the user to saves the file to a new filename.
 
   @precon  None.
   @postcon The methods returns true if the file was saved to a new filename.
@@ -1390,6 +1415,7 @@ Begin
   Result := False;
   Try
     Editor.Lines.SaveToFile(strFileName);
+    Editor.MarkSaved;
     Result := True;
   Except
     On E : EWriteError Do
@@ -1400,7 +1426,30 @@ Begin
   End;
   TDGHCustomSynEditFunctions.SaveToINIFile(FINIFile, Editor);
   Editor.Modified := False;
-  Editor.MarkModifiedLinesAsSaved();
+End;
+
+(**
+
+  This method saves all the highlighter settings to the INI File.
+
+  @precon  None.
+  @postcon All the highlighter settings are saved.
+
+**)
+Procedure TfrmGEMainForm.SaveHighlighters;
+
+Var
+  iComponent : Integer;
+  
+Begin
+  For iComponent := 0 To ComponentCount - 1 Do
+    If Components[iComponent] Is TSynCustomHighlighter Then
+      Begin
+        TDGHCustomSynEditFunctions.SaveHighlighterToINIFile(
+          FINIFile,
+          Components[iComponent] As TSynCustomHighlighter
+        );
+      End;
 End;
 
 (**
@@ -1442,7 +1491,7 @@ End;
   This is an on draw event handler for the statusbar panels.
 
   @precon  None.
-  @postcon Draws the memory useage.
+  @postcon Draws the memory usage.
 
   @nocheck MissingConstInParam
   @nohint  Panel
@@ -1512,7 +1561,7 @@ End;
   This is an on mouse down event handler for the status bar.
 
   @precon  None.
-  @postcon Displays popup menus for the VCL Themes and Highlight panels.
+  @postcon Displays pop-up menus for the VCL Themes and Highlight panels.
 
   @param   Sender as a TObject
   @param   Button as a TMouseButton
@@ -1570,11 +1619,11 @@ End;
 
 (**
 
-  This method searches the form for highlighters and adds them to a popup menu with the component index 
+  This method searches the form for high lighters and adds them to a pop-up menu with the component index 
   in the menu item tag property and then displays the menu at the mouse position provided.
 
   @precon  None.
-  @postcon A popup menu is displayed with a list of the available highlighters.
+  @postcon A pop-up menu is displayed with a list of the available high lighters.
 
   @param   Pt as a TPoint as a constant
 
@@ -1615,10 +1664,10 @@ End;
 
 (**
 
-  This method displays the VCL Themes statusbar panel popup menu.
+  This method displays the VCL Themes statusbar panel pop-up menu.
 
   @precon  None.
-  @postcon The VCL Themes to select from are displayed in the popup menu.
+  @postcon The VCL Themes to select from are displayed in the pop-up menu.
 
   @param   Pt as a TPoint as a constant
 
@@ -1656,7 +1705,7 @@ end;
 
 (**
 
-  This is an on timer event handler for the memeory timer.
+  This is an on timer event handler for the memory timer.
 
   @precon  None.
   @postcon Updates the memory statusbar panel.
@@ -1710,17 +1759,13 @@ Var
   strFileName : String;
   
 Begin
-  If Visible Then
-    Begin
-      tmOpenFile.Enabled := False;
-      If ParamCount = 0 Then
-        strFileName := ExpandFileName('')
-      Else
-        strFileName := ExpandFileName(ParamStr(1));
-      OpenFile(strFileName);
-      //: @note Set current dir after loading file else ExpandFileName above will use the current directory.
-      SetCurrentDir(FCurrentDir);
-    End;
+  If ParamCount = 0 Then
+    strFileName := ExpandFileName('')
+  Else
+    strFileName := ExpandFileName(ParamStr(1));
+  OpenFile(strFileName);
+  //: @note Set current dir after loading file else ExpandFileName above will use the current directory.
+  SetCurrentDir(FCurrentDir);
 End;
 
 (**
@@ -1728,7 +1773,7 @@ End;
   This method updates the application title with version / build information.
 
   @precon  None.
-  @postcon The applciation title is updated with version and build information.
+  @postcon The application title is updated with version and build information.
 
 **)
 Procedure TfrmGEMainForm.UpdateAppTitle;
@@ -1782,7 +1827,7 @@ End;
 
 (**
 
-  Thisd method updates the given status bar panel with the given text ensuring the panel is width enough
+  This method updates the given status bar panel with the given text ensuring the panel is width enough
   to contain the text plus a margin.
 
   @precon  None.
@@ -1810,7 +1855,7 @@ End;
   This is an on click event handler for the status bar VCL themes panel.
 
   @precon  None.
-  @postcon Changes the VCL Theme to the one indexed in the popup menus tag property.
+  @postcon Changes the VCL Theme to the one indexed in the pop-up menus tag property.
 
   @param   Sender as a TObject
 

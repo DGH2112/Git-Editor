@@ -4,8 +4,8 @@
   quick text edit changes.
 
   @Author  David Hoyle
-  @Version 1.002
-  @Date    05 Feb 2022
+  @Version 1.006
+  @Date    20 Feb 2022
 
   @nocheck HardCodedString
   

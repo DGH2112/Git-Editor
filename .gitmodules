@@ -1,12 +1,12 @@
 [submodule "DGHCustomSynEditControls"]
 	path = DGHCustomSynEditControls
 url=https://github.com/DGH2112/DGHCustomSynEditControls
-[submodule "SynEdit"]
-	path = SynEdit
-	url = https://github.com/SynEdit/SynEdit.git
 [submodule "vcl-styles-utils"]
 	path = vcl-styles-utils
 	url = https://github.com/RRUZ/vcl-styles-utils.git
 [submodule "DDetours"]
 	path = DDetours
 	url = https://github.com/MahdiSafsafi/DDetours.git
+[submodule "TurboPack-SynEdit"]
+	path = TurboPack-SynEdit
+	url = https://github.com/TurboPack/SynEdit.git
