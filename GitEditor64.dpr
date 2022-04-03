@@ -4,8 +4,8 @@
   quick tetx edit changes.
 
   @Author  David Hoyle
-  @Version 1.004
-  @Date    20 Feb 2022
+  @Version 1.006
+  @Date    03 Apr 2022
 
   @nocheck HardCodedString
   
@@ -19,6 +19,7 @@ uses
   EMemLeaks,
   EResLeaks,
   EDebugExports,
+  EDebugMap,
   EDebugJCL,
   EMapWin32,
   EAppVCL,
@@ -49,4 +50,5 @@ Begin
   Application.CreateForm(TfrmGEMainForm, frmGEMainForm);
   Application.Run;
 End.
+
 
