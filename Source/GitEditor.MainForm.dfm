@@ -1335,4 +1335,13 @@ object frmGEMainForm: TfrmGEMainForm
     Left = 176
     Top = 192
   end
+  object SynSpellCheck1: TSynSpellCheck
+    AttributesChecked.Strings = (
+      'Comment'
+      'String')
+    Editor = Editor
+    CheckAsYouType = True
+    Left = 168
+    Top = 336
+  end
 end

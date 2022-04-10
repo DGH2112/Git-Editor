@@ -127,7 +127,6 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Icon_MainIcon>GitEditor.ico</Icon_MainIcon>
         <Debugger_CWD>D:\Documents\RAD Studio\Applications\Git Editor\</Debugger_CWD>
-        <DCC_Define>EUREKALOG;$(DCC_Define)</DCC_Define>
         <DCC_MapFile>3</DCC_MapFile>
         <Debugger_RunParams>&quot;Test Text File.md&quot;</Debugger_RunParams>
         <AppDPIAwarenessMode>PerMonitor</AppDPIAwarenessMode>
@@ -162,7 +161,6 @@
         <DCC_MapFile>3</DCC_MapFile>
         <DCC_DebugInformation>2</DCC_DebugInformation>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
-        <DCC_Define>EUREKALOG;$(DCC_Define)</DCC_Define>
         <AppDPIAwarenessMode>PerMonitor</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
@@ -1379,6 +1377,11 @@
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">False</Platform>
             </Platforms>
+            <MMX>
+                <UsesClauseFormatter AutoFormat="1">
+                    <GroupNames>System;System.Win;Data;Vcl;WinApi</GroupNames>
+                </UsesClauseFormatter>
+            </MMX>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

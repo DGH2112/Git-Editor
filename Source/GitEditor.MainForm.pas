@@ -4,8 +4,8 @@
   text editor.
 
   @Author  David Hoyle
-  @Version 2.552
-  @Date    21 Feb 2022
+  @Version 2.646
+  @Date    10 Apr 2022
 
 **)
 Unit GitEditor.MainForm;
@@ -69,7 +69,8 @@ Uses
   SynHighlighterGeneral,
   SynEditOptionsDialog,
   SynHighlighterMulti,
-  SynEditCodeFolding;
+  SynEditCodeFolding,
+  SynSpellCheck;
 
 Type
   (** An enumerate to define the statusbar columns. @nohints **)
@@ -172,6 +173,7 @@ Type
     UnfoldLevel22: TMenuItem;
     UnfoldLevel31: TMenuItem;
     UnfoldRegions1: TMenuItem;
+    SynSpellCheck1: TSynSpellCheck;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -264,9 +266,9 @@ Implementation
 {$R *.dfm}
 
 Uses
-  {$IFDEF CODESITE}
+  {$IFDEF DEBUG}
   CodeSiteLogging,
-  {$ENDIF CODESITE}
+  {$ENDIF DEBUG}
   System.StrUtils,
   System.UITypes,
   System.TypInfo,
@@ -1016,6 +1018,7 @@ Begin
     Iteratehighlighters('*' + strExt);
   If Not Assigned(Editor.Highlighter) Then
     Editor.Highlighter := SynGeneralSyn;
+  SynSpellCheck1.CheckFile;
   Editor.UseCodeFolding := True;
   UpdateStatusBar(scFileType, TDGHCustomSynEditFunctions.HighlighterName(Editor.Highlighter));
 End;
