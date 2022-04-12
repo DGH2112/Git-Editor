@@ -1339,7 +1339,6 @@ object frmGEMainForm: TfrmGEMainForm
     AttributesChecked.Strings = (
       'Comment'
       'String')
-    Editor = Editor
     CheckAsYouType = True
     Left = 168
     Top = 336

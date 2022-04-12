@@ -4,8 +4,8 @@
   text editor.
 
   @Author  David Hoyle
-  @Version 2.646
-  @Date    10 Apr 2022
+  @Version 2.669
+  @Date    12 Apr 2022
 
 **)
 Unit GitEditor.MainForm;
@@ -1199,6 +1199,9 @@ ResourceString
   strCreateFile = 'Create the file "%s"?';
   strDoNOTCreateFile = 'Do NOT create the file "%s"!';
 
+Const
+  iMaxSpellCheckLineCount = 9999;
+
 Var
   sl : TStringList;
   
@@ -1207,10 +1210,13 @@ Begin
   FFileName := strFileName;
   If FileExists(FFileName) Then
     Begin
+      SynSpellCheck1.Editor := Nil;
       Editor.Highlighter := Nil;
       Editor.Lines.LoadFromFile(FFileName);
       Editor.ClearTrackChanges;
       Editor.ReadOnly := (GetFileAttributes(PChar(FFileName)) And FILE_ATTRIBUTE_READONLY <> 0);
+      If Editor.Lines.Count <= iMaxSpellCheckLineCount Then
+        SynSpellCheck1.Editor := Editor;
     End Else
     Begin
       If DirectoryExists(ExtractFilePath(FFileName)) Then
